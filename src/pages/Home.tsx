@@ -4,7 +4,8 @@ function Home() {
   return (
     <div className="flex flex-col">
       <span>Home</span>
-      <Link to="/chat">Chat</Link>
+      <Link to="/login">Login</Link>
+      <Link to="/signup">SignUp</Link>
     </div>
   );
 }

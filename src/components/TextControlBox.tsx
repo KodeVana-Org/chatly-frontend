@@ -62,6 +62,18 @@ const TextControlBox: React.FC<TextControlBoxProps> = ({ onMessageSend }) => {
     console.log(messageData); // TODO: remove
   };
 
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedFiles(event.target.files);
+  };
+
+  const getDisplayText = () => {
+    if (!selectedFiles) return "";
+    if (selectedFiles.length === 1) return selectedFiles[0].name;
+    return `${selectedFiles.length} files selected`;
+  };
+
   const isSendButtonDisabled = textMessage.trim() === "";
 
   return (
@@ -69,14 +81,28 @@ const TextControlBox: React.FC<TextControlBoxProps> = ({ onMessageSend }) => {
       {previews.length === 0 ? (
         <div>
           <div className="px-4 py-3 flex flex-row gap-4 border-b border-slate-300">
+            <span className="p-1 text-[25px] border border-white shadow-md hover:shadow-lg rounded-[7px]">
+              <input
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                accept=".pdf,.doc,.docx"
+                id="fileInput"
+                className="hidden"
+              />
+              <label htmlFor="fileInput" className="flex flex-row">
+                <HiOutlineDocumentAdd />
+                <span className="text-[18px] justify-center content-center text-center">
+                  {getDisplayText()}
+                </span>
+              </label>
+            </span>
+
             <button className="p-1 text-[25px] border border-white shadow-md hover:shadow-lg rounded-[7px]">
-              <HiOutlineDocumentAdd />
-            </button>
-            <button className="p-1 text-[25px] border border-white shadow-md hover:shadow-lg rounded-[7px]">
-              <div {...getRootProps()}>
+              <span {...getRootProps()}>
                 <TbPhotoPlus />
                 <input {...getInputProps()} multiple />
-              </div>
+              </span>
             </button>
             <button className="p-1 text-[25px] border border-white shadow-md hover:shadow-lg rounded-[7px]">
               <AiOutlineVideoCameraAdd />

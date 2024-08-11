@@ -2,8 +2,10 @@ import { LoginImg } from "../../assets";
 import { Link } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function SignUp() {
+  const navigate = useNavigate();
   const [visiblePass, setVisiblePass] = useState(false);
   const togglePassVisibility = () => {
     setVisiblePass(!visiblePass);
@@ -65,7 +67,10 @@ function SignUp() {
           </span>
         </div>
         <div className="my-5 w-full justify-center text-center content-center">
-          <button className="my-5 p-5 w-2/4 hover:text-white bg-white hover:bg-[#6893FF] border-2 border-blue-100 hover:border-white rounded-[10px] text-[36] font-semibold cursor-pointer">
+          <button
+            onClick={() => navigate("/chat")}
+            className="my-5 p-5 w-2/4 hover:text-white bg-white hover:bg-[#6893FF] border-2 border-blue-100 hover:border-white rounded-[10px] text-[36] font-semibold cursor-pointer"
+          >
             SignUp
           </button>
         </div>
