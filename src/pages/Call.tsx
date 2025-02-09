@@ -1,70 +1,47 @@
-import { CgProfile } from "react-icons/cg";
-import { TbMessageChatbot } from "react-icons/tb";
-import { IoPeopleSharp } from "react-icons/io5";
-import { FaPhoneAlt } from "react-icons/fa";
 import { IoIosSearch } from "react-icons/io";
 import { Link } from "react-router-dom";
-import CallList from "../components/CallList.tsx";
+import { CallList, CallLogBox, Navbar } from "../components/index.ts";
 
 function Call() {
   return (
-    <div className="pr-3 h-screen w-screen flex flex-row">
-      <div className="h-full px-3 py-7 flex flex-col justify-between">
-        <Link
-          to="/"
-          className="text-[30px] font-bold px-4 py-3 bg-blue-100 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-        >
-          T
-        </Link>
-        <span className="flex flex-col gap-3 w-full">
-          <Link
-            to="/chat"
-            className="p-3 text-[30px] bg-blue-100 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-          >
-            <TbMessageChatbot />
-          </Link>
-          <Link
-            to="/contacts"
-            className="p-3 text-[30px] bg-blue-100 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-          >
-            <IoPeopleSharp />
-          </Link>
-          <Link
-            to="/calls"
-            className="p-3 text-[25px] text-white bg-blue-500 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-          >
-            <FaPhoneAlt />
-          </Link>
-        </span>
-        <span className="flex flex-col gap-3 w-full">
-          <Link
-            to="/profile"
-            className="p-3 text-[30px] bg-blue-100 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-          >
-            <CgProfile />
-          </Link>
-        </span>
-      </div>
-      <div className="w-full my-3 grid grid-cols-3 bg-blue-50 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg">
-        <div className="p-6 col-span-1 flex flex-col gap-4 border-r-2 border-r-slate-300">
-          <span>
-            <h2 className="text-[25px] font-semibold">Call logs</h2>
-          </span>
-          <span className="relative w-full shadow-md hover:shadow-lg">
-            <input
-              className="w-full pl-6 pr-10 py-2 h-[50px] rounded-[7px] focus:outline-none"
-              placeholder="Search here"
-              type="search"
-            />
-            <span className="absolute right-3 top-3 text-[25px]">
-              <IoIosSearch />
-            </span>
-          </span>
-          <span className="h-[76vh] overflow-y-scroll rounded-[7px] shadow-md hover:shadow-lg">
-            <CallList />
-          </span>
+    <div className="pr-3 h-screen w-screen flex flex-row gap-7 bg-[#E0E9F8] overflow-hidden">
+      {/* Navbar */}
+      <Navbar activeButton="calls" />
+
+      {/* Page container */}
+      <div className="w-full flex flex-row gap-7">
+        <div className="flex flex-col gap-7">
+          <div className="min-w-[30rem] max-w-[35rem] bg-white rounded-b-[2rem]">
+            <div className="p-5 flex flex-col gap-7">
+              <h3 className="text-[1.8rem] font-medium">Call logs</h3>
+              <span className="flex gap-3 items-center justify-center">
+                <Link to={""}>See All</Link>
+              </span>
+            </div>
+          </div>
+
+          {/* User List */}
+          <div className="h-full min-w-[30rem] max-w-[35rem] bg-white rounded-t-[2rem]">
+            <div className="p-7 pt-7 flex flex-col gap-4">
+              <span className="relative w-full border border-[#007BFF] rounded-[2rem]">
+                <span className="absolute left-3 top-3 text-[2rem]">
+                  <IoIosSearch />
+                </span>
+                <input
+                  className="w-full pr-6 pl-14 py-2 h-[50px] rounded-[2rem] focus:outline-none"
+                  placeholder="Search here"
+                  type="search"
+                />
+              </span>
+              <span className="h-[72vh] overflow-y-scroll rounded-[7px]">
+                <CallList />
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="col-span-2 w-full">Hello</div>
+
+        {/* Chat Box */}
+        <CallLogBox />
       </div>
     </div>
   );

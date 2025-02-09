@@ -1,8 +1,8 @@
 // Importing necessary modules and interfaces
 import { AxiosResponse } from "axios";
-import { FreeAPISuccessResponseInterface } from "../interfaces/api.tsx";
-import { ChatListItemInterface } from "../interfaces/chat.tsx";
-import { UserInterface } from "../interfaces/user.tsx";
+import { FreeAPISuccessResponseInterface } from "../interfaces/api.ts";
+import { ChatListItemInterface } from "../interfaces/chat.ts";
+import { UserInterface } from "../interfaces/user.ts";
 
 // A utility function for handling API requests with loading, success, and error handling
 export const requestHandler = async (

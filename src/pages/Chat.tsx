@@ -1,94 +1,131 @@
-import { CgAddR, CgProfile } from "react-icons/cg";
-import { TbMessageChatbot } from "react-icons/tb";
-import { IoPeopleSharp } from "react-icons/io5";
-import { FaPhoneAlt } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { useChat } from "../context/ChatContext";
 import { IoIosSearch } from "react-icons/io";
-import { Link } from "react-router-dom";
-import ChatList from "../components/ChatList.tsx";
-import ChatBox from "../components/ChatBox.tsx";
-import TextControlBox from "../components/TextControlBox.tsx";
+import { ChatList, ChatBox, Navbar, ProfilePreview } from "../components";
+import { startMessaging } from "../api";
 
 function Chat() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMyChatList, setIsMyChatList] = useState(true);
+  const [isIncomingReq, setIsIncomingReq] = useState(false);
+  const [isGroupChat, setIsGroupChat] = useState(false);
+  const [profileUrl, setProfileUrl] = useState("");
+  const [user, setUser] = useState<any>({});
+  const [showProfile, setShowProfile] = useState(false);
+
+  // NOTE: Chat context
+  const { setConversationId, setRecieverId } = useChat();
+
+  // NOTE: Function to receive conversationId from ChatList
+  const handleChatSelect = async (userId: string) => {
+    setRecieverId(userId); // NOTE: Set reciever's id in the context
+    try {
+      const response = await startMessaging(isGroupChat, [userId]);
+      if (response.data.statusCode === 200) {
+        setConversationId(response.data.data._id);
+      }
+    } catch (err: any) {
+      console.error("Error:", err); // TODO: handle error properly
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    setUser(user);
+    setProfileUrl(user?.avatar?.url || "");
+  }, []);
+
   return (
-    <div className="pr-3 h-screen w-screen flex flex-row">
-      <div className="h-full px-3 py-7 flex flex-col justify-between">
-        <Link
-          to="/"
-          className="text-[30px] font-bold px-4 py-3 bg-blue-100 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-        >
-          T
-        </Link>
-        <span className="flex flex-col gap-3 w-full">
-          <Link
-            to="/chat"
-            className="p-3 text-[30px] text-white bg-blue-500 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-          >
-            <TbMessageChatbot />
-          </Link>
-          <Link
-            to="/contacts"
-            className="p-3 text-[30px] bg-blue-100 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-          >
-            <IoPeopleSharp />
-          </Link>
-          <Link
-            to="/calls"
-            className="p-3 text-[25px] bg-blue-100 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-          >
-            <FaPhoneAlt />
-          </Link>
-        </span>
-        <span className="flex flex-col gap-3 w-full">
-          <Link
-            to="/profile"
-            className="p-3 text-[30px] bg-blue-100 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg"
-          >
-            <CgProfile />
-          </Link>
-        </span>
-      </div>
-      <div className="w-full my-3 grid grid-cols-3 bg-blue-50 rounded-[10px] border-2 border-white shadow-md hover:shadow-lg">
-        <div className="p-6 col-span-1 flex flex-col gap-4 border-r-2 border-r-slate-300">
-          <button className="flex flex-row gap-2 rounded-[7px] bg-white text-right shadow-md hover:shadow-lg">
-            <span className="px-5 py-3 text-[28px] border-r-2">
-              <CgAddR />
-            </span>
-            <p className="pl-3 pr-9 my-auto">New conversation</p>
-          </button>
-          <span>
-            <h2 className="text-[25px] font-semibold">Chats</h2>
-          </span>
-          <span className="relative w-full shadow-md hover:shadow-lg">
-            <input
-              className="w-full pl-6 pr-10 py-2 h-[50px] rounded-[7px] focus:outline-none"
-              placeholder="Search here"
-              type="search"
-            />
-            <span className="absolute right-3 top-3 text-[25px]">
-              <IoIosSearch />
-            </span>
-          </span>
-          <span className="h-[67vh] overflow-y-scroll rounded-[7px] shadow-md hover:shadow-lg">
-            <ChatList />
-          </span>
-        </div>
-        <div className="col-span-2 w-full">
-          <span className="pl-9 py-3 flex flex-row gap-5 bg-white border-slate-300 border-y border-r shadow-sm rounded-tr-[7px]">
-            <img
-              className="h-10 w-10 rounded-[50%]"
-              src="../assets/profile.png"
-              alt=""
-            />
-            <span className="flex flex-col gap-1">
-              <h4 className="font-semibold">Olive Maccy</h4>
-              <p className="text-[12px] text-gray-400">Active a minute ago</p>
-            </span>
-          </span>
-          <div className="w-full h-[88vh] flex flex-col relative justify-between">
-            <ChatBox />
-            <TextControlBox />
+    <div className="pr-3 h-screen w-screen flex flex-row gap-7 bg-[#E0E9F8] overflow-hidden">
+      {/* Navbar */}
+      <Navbar activeButton="chat" />
+
+      {/* Page container */}
+      <div className="w-full flex flex-row gap-7">
+        <div className="flex flex-col gap-7">
+          <div className="min-w-[30rem] max-w-[35rem] bg-white dark:bg-black rounded-b-[2rem]">
+            <div className="p-5 flex flex-col gap-7">
+              <span className="flex gap-3 items-center justify-between">
+                <h3 className="text-[1.8rem] text-black dark:text-white font-medium">
+                  Messages
+                </h3>
+                <img
+                  onClick={() => setShowProfile(true)}
+                  className="h-10 aspect-square rounded-full"
+                  src={profileUrl}
+                  alt={user.username}
+                />
+              </span>
+              <div className="mx-5 flex flex-row justify-between">
+                <button
+                  onClick={() => {
+                    setIsMyChatList(true);
+                    setIsIncomingReq(false);
+                  }}
+                  className={`text-black dark:text-white hover:font-semibold ${
+                    isMyChatList ? (!isIncomingReq ? "font-semibold" : "") : ""
+                  }`}
+                >
+                  My chats
+                </button>
+                <button
+                  onClick={() => {
+                    setIsMyChatList(false);
+                    setIsIncomingReq(false);
+                  }}
+                  className={`text-black dark:text-white hover:font-semibold ${
+                    !isMyChatList ? (!isIncomingReq ? "font-semibold" : "") : ""
+                  }`}
+                >
+                  Find friends
+                </button>
+                <button
+                  onClick={() => {
+                    setIsMyChatList(false);
+                    setIsIncomingReq(true);
+                  }}
+                  className={`text-black dark:text-white hover:font-semibold ${
+                    !isMyChatList ? (isIncomingReq ? "font-semibold" : "") : ""
+                  }`}
+                >
+                  Incoming requests
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* User List */}
+          <div className="h-full min-w-[30rem] max-w-[35rem] bg-white dark:bg-black rounded-t-[2rem]">
+            <div className="p-7 pt-7 flex flex-col gap-4">
+              <span className="relative w-full border border-[#007BFF] rounded-[2rem]">
+                <span className="absolute left-3 top-3 text-[2rem]">
+                  <IoIosSearch />
+                </span>
+                <input
+                  className="w-full pr-6 pl-14 py-2 h-[50px] rounded-[2rem] focus:outline-none"
+                  placeholder="Search here"
+                  type="search"
+                />
+              </span>
+              <span className="h-[72vh] overflow-y-scroll rounded-[7px]">
+                <ChatList
+                  isMyChatList={isMyChatList}
+                  isIncomingReq={isIncomingReq}
+                  onChatSelect={handleChatSelect}
+                />
+              </span>
+            </div>
           </div>
         </div>
+
+        {/* Chat Box */}
+        <ChatBox />
+        {/* Profile container */}
+        {showProfile && (
+          <ProfilePreview user={user} onClose={() => setShowProfile(false)} />
+        )}
       </div>
     </div>
   );

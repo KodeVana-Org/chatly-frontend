@@ -1,120 +1,233 @@
-function ChatList() {
+import { useState, useEffect, useCallback } from "react";
+import {
+  getAllUsers,
+  getFriends,
+  sendFdReq,
+  cancelFdReq,
+  getIncomingReqUsers,
+  incomingFdReq,
+} from "../api";
+import formatMessageTime from "../utils/setMessageTime";
+
+interface ChatListProps {
+  isMyChatList: boolean;
+  isIncomingReq: boolean;
+  onChatSelect: (chatId: string) => void;
+}
+
+const ChatList: React.FC<ChatListProps> = ({
+  isMyChatList,
+  isIncomingReq,
+  onChatSelect,
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [allFriendList, setAllFriendList] = useState<any[]>([]);
+  const [userListWithoutFR, setUserListWithoutFR] = useState<any[]>([]);
+  const [userListWithFR, setUserListWithFR] = useState<any[]>([]);
+  const [incomingFRUsers, setIncomingFRUsers] = useState<any[]>([]);
+
+  // Retrieve user ID
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const myId = user?._id;
+
+  // Fetch all users or friends
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (isMyChatList && !isIncomingReq) {
+        const response = await getFriends();
+        if (response.data.statusCode === 200) {
+          setAllFriendList(response.data.data.friends);
+          setUserListWithoutFR([]);
+          setUserListWithFR([]);
+          setIncomingFRUsers([]);
+        }
+      } else if (!isMyChatList && !isIncomingReq) {
+        const response = await getAllUsers(myId);
+        if (response.data.statusCode === 200) {
+          setUserListWithoutFR(response.data.data.usersWithoutSentRequests);
+          setUserListWithFR(response.data.data.usersWithSentRequests);
+          setAllFriendList([]);
+          setIncomingFRUsers([]);
+        }
+      } else {
+        const response = await getIncomingReqUsers(myId);
+        if (response.data.statusCode === 200) {
+          setIncomingFRUsers(response.data.data.incomingRequests);
+          setAllFriendList([]);
+          setUserListWithoutFR([]);
+          setUserListWithFR([]);
+        }
+      }
+    } catch (err: any) {
+      console.error("Error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isMyChatList, isIncomingReq, myId]); // Depend on necessary variables only
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // Handle send friend request
+  const handleSendFriendReq = async (friendId: string) => {
+    try {
+      const response = await sendFdReq(myId, friendId);
+      if (response.data.statusCode === 200) {
+        fetchUsers();
+      }
+    } catch (err: any) {
+      console.error("Error:", err); // TODO: handle error properly
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle cancel friend request
+  const handleCancelFriendReq = async (friendId: string) => {
+    try {
+      const response = await cancelFdReq(myId, friendId);
+      if (response.data.statusCode === 200) {
+        fetchUsers();
+      }
+    } catch (err: any) {
+      console.error("Error:", err); // TODO: handle error properly
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle accept / reject request
+  const handleIncomingFriendReq = async (requestId: string, action: string) => {
+    try {
+      const response = await incomingFdReq(requestId, action);
+      if (response.data.statusCode === 200) {
+        fetchUsers();
+      }
+    } catch (err: any) {
+      console.error("Error:", err); // TODO: handle error properly
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <ul className="p-2 bg-white">
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">05:48 AM</p>
+    <ul className="p-2 bg-white dark:bg-black">
+      {allFriendList.map((user) => (
+        <li
+          key={user._id}
+          className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer"
+          onClick={() => onChatSelect(user._id)}
+        >
+          <img
+            className="h-10 w-10 rounded-[50%]"
+            src={user.avatar.url}
+            alt={user.username[0]}
+          />
+          <span className="w-full flex flex-col gap-2">
+            <span className="flex flex-row justify-between">
+              <h4 className="my-auto text-black dark:text-white">
+                {user.username}
+              </h4>
+              <p className="text-[15px] text-gray-500">
+                {formatMessageTime(user.lastMessage.createdAt)}
+              </p>
+            </span>
+            <p className="text-[14px] text-gray-400">
+              {user.lastMessage.content}
+            </p>
           </span>
-          <p className="text-[14px] text-gray-400">Hello</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">10:03 PM</p>
+        </li>
+      ))}
+      {userListWithoutFR.map((user) => (
+        <li
+          key={user._id}
+          className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900"
+          onClick={() => onChatSelect(user._id)}
+        >
+          <img
+            className="h-10 w-10 rounded-[50%]"
+            src={user.avatar.url}
+            alt={user.username}
+          />
+          <span className="w-full flex flex-col gap-2">
+            <span className="flex flex-row justify-between">
+              <h4 className="my-auto text-black dark:text-white">
+                {user.username}
+              </h4>
+              <button
+                onClick={() => handleSendFriendReq(user._id)}
+                className="py-2 px-2 font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-xl cursor-pointer"
+              >
+                Send Friend Request
+              </button>
+            </span>
           </span>
-          <p className="text-[14px] text-gray-400">
-            I'm waiting! where are you?
-          </p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">Yesterday</p>
+        </li>
+      ))}
+      {userListWithFR.map((user) => (
+        <li
+          key={user._id}
+          className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900"
+          onClick={() => onChatSelect(user._id)}
+        >
+          <img
+            className="h-10 w-10 rounded-[50%]"
+            src={user.avatar.url}
+            alt={user.username}
+          />
+          <span className="w-full flex flex-col gap-2">
+            <span className="flex flex-row justify-between">
+              <h4 className="my-auto text-black dark:text-white">
+                {user.username}
+              </h4>
+              <button
+                onClick={() => handleCancelFriendReq(user._id)}
+                className="py-2 px-2 font-medium text-white bg-red-500 dark:bg-red-700 rounded-xl"
+              >
+                Cancel Request
+              </button>
+            </span>
           </span>
-          <p className="text-[14px] text-gray-400">Love you babes</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">21-09-2024</p>
+        </li>
+      ))}
+      {incomingFRUsers.map((user) => (
+        <li
+          key={user.sender._id}
+          className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900"
+          onClick={() => onChatSelect(user.sender._id)}
+        >
+          <img
+            className="h-10 w-10 rounded-[50%]"
+            src={user.sender.avatar.url}
+            alt={user.sender.username[0]}
+          />
+          <span className="w-full flex flex-col gap-2">
+            <span className="flex flex-row justify-between">
+              <h4 className="my-auto text-black dark:text-white">
+                {user.sender.username}
+              </h4>
+              <span className="flex gap-3">
+                <button
+                  onClick={() => handleIncomingFriendReq(user._id, "accept")}
+                  className="py-2 px-2 font-medium text-white bg-green-600 hover:bg-green-700 rounded-xl cursor-pointer"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => handleIncomingFriendReq(user._id, "reject")}
+                  className="py-2 px-2 font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl cursor-pointer"
+                >
+                  Reject
+                </button>
+              </span>
+            </span>
           </span>
-          <p className="text-[14px] text-gray-400">I miss you dear</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">21-09-2024</p>
-          </span>
-          <p className="text-[14px] text-gray-400">Great!</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">21-09-2024</p>
-          </span>
-          <p className="text-[14px] text-gray-400">Get me my bags</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">21-09-2024</p>
-          </span>
-          <p className="text-[14px] text-gray-400">You are evil</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">21-09-2024</p>
-          </span>
-          <p className="text-[14px] text-gray-400">Have you talked with mom?</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">21-09-2024</p>
-          </span>
-          <p className="text-[14px] text-gray-400">Come home I'm alone</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">21-09-2024</p>
-          </span>
-          <p className="text-[14px] text-gray-400">How are you darling?</p>
-        </span>
-      </li>
-      <li className="flex flex-row gap-5 border-b-2 px-2 py-4">
-        <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
-        <span className="w-full flex flex-col gap-2">
-          <span className="flex flex-row justify-between">
-            <h4 className="my-auto">Anisa Timmer</h4>
-            <p className="text-[15px] text-gray-500">21-09-2024</p>
-          </span>
-          <p className="text-[14px] text-gray-400">Dear love!</p>
-        </span>
-      </li>
+        </li>
+      ))}
     </ul>
   );
-}
+};
 
 export default ChatList;

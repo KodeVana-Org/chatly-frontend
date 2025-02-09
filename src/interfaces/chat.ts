@@ -1,4 +1,4 @@
-import { UserInterface } from "./user";
+import { UserInterface } from "./user.ts";
 
 export interface ChatListItemInterface {
   admin: string;

@@ -1,17 +1,18 @@
-import { Navbar, SettingsBox } from "../components/index.ts";
+import { ChatBox, Navbar } from "../components/index.ts";
 
-function Settings() {
+function Tweekie() {
   return (
     <div className="pr-3 h-screen w-screen flex flex-row gap-7 bg-[#E0E9F8] overflow-hidden">
       {/* Navbar */}
-      <Navbar activeButton="settings" />
+      <Navbar activeButton="tweekie" />
 
       {/* Page container */}
       <div className="w-full flex flex-row gap-7">
-        <SettingsBox />
+        {/* Chat Box */}
+        <ChatBox />
       </div>
     </div>
   );
 }
 
-export default Settings;
+export default Tweekie;
