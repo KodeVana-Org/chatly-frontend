@@ -1,6 +1,6 @@
 function CallList() {
   return (
-    <ul className="p-2 bg-white">
+    <ul className="p-2 bg-white dark:bg-black">
       <li className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50">
         <img className="h-10 w-10 rounded-[50%]" src="" alt="" />
         <span className="w-full flex flex-col gap-2">

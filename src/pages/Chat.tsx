@@ -22,7 +22,7 @@ function Chat() {
     try {
       const response = await startMessaging(isGroupChat, [userId]);
       if (response.data.statusCode === 200) {
-        setConversationId(response.data.data._id);
+        setConversationId(response.data.data?._id);
       }
     } catch (err: any) {
       console.error("Error:", err); // TODO: handle error properly

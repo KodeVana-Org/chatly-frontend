@@ -2,7 +2,7 @@ import { Profile } from "../assets/index.ts";
 
 function CallLogBox() {
   return (
-    <div className="mt-7 p-7 w-full flex flex-col gap-7 bg-white rounded-t-[2rem]">
+    <div className="mt-7 p-7 w-full flex flex-col gap-7 bg-white dark:bg-black rounded-t-[2rem]">
       <h3 className="text-[1.5rem]">Call info</h3>
       <div className="w-full flex flex-col border border-[#007BFF] rounded-[2rem]">
         <div className="p-5 flex justify-between">

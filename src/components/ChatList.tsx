@@ -43,7 +43,7 @@ const ChatList: React.FC<ChatListProps> = ({
       if (isMyChatList && !isIncomingReq) {
         const response = await getFriends();
         if (response.data.statusCode === 200) {
-          setAllFriendList(response.data.data.friends);
+          setAllFriendList(response.data.data?.friends);
           setUserListWithoutFR([]);
           setUserListWithFR([]);
           setIncomingFRUsers([]);
@@ -51,15 +51,15 @@ const ChatList: React.FC<ChatListProps> = ({
       } else if (!isMyChatList && !isIncomingReq) {
         const response = await getAllUsers(myId);
         if (response.data.statusCode === 200) {
-          setUserListWithoutFR(response.data.data.usersWithoutSentRequests);
-          setUserListWithFR(response.data.data.usersWithSentRequests);
+          setUserListWithoutFR(response.data.data?.usersWithoutSentRequests);
+          setUserListWithFR(response.data.data?.usersWithSentRequests);
           setAllFriendList([]);
           setIncomingFRUsers([]);
         }
       } else {
         const response = await getIncomingReqUsers(myId);
         if (response.data.statusCode === 200) {
-          setIncomingFRUsers(response.data.data.incomingRequests);
+          setIncomingFRUsers(response.data.data?.incomingRequests);
           setAllFriendList([]);
           setUserListWithoutFR([]);
           setUserListWithFR([]);
@@ -128,20 +128,20 @@ const ChatList: React.FC<ChatListProps> = ({
         >
           <img
             className="h-10 w-10 rounded-[50%]"
-            src={user.avatar.url}
-            alt={user.username[0]}
+            src={user.avatar?.url}
+            alt={user?.username[0]}
           />
           <span className="w-full flex flex-col gap-2">
             <span className="flex flex-row justify-between">
               <h4 className="my-auto text-black dark:text-white">
-                {user.username}
+                {user?.username}
               </h4>
               <p className="text-[15px] text-gray-500">
-                {formatMessageTime(user.lastMessage.createdAt)}
+                {formatMessageTime(user.lastMessage?.createdAt)}
               </p>
             </span>
             <p className="text-[14px] text-gray-400">
-              {user.lastMessage.content}
+              {user.lastMessage?.content}
             </p>
           </span>
         </li>
@@ -154,13 +154,13 @@ const ChatList: React.FC<ChatListProps> = ({
         >
           <img
             className="h-10 w-10 rounded-[50%]"
-            src={user.avatar.url}
-            alt={user.username}
+            src={user.avatar?.url}
+            alt={user?.username}
           />
           <span className="w-full flex flex-col gap-2">
             <span className="flex flex-row justify-between">
               <h4 className="my-auto text-black dark:text-white">
-                {user.username}
+                {user?.username}
               </h4>
               <button
                 onClick={() => handleSendFriendReq(user._id)}
@@ -180,13 +180,13 @@ const ChatList: React.FC<ChatListProps> = ({
         >
           <img
             className="h-10 w-10 rounded-[50%]"
-            src={user.avatar.url}
-            alt={user.username}
+            src={user.avatar?.url}
+            alt={user?.username}
           />
           <span className="w-full flex flex-col gap-2">
             <span className="flex flex-row justify-between">
               <h4 className="my-auto text-black dark:text-white">
-                {user.username}
+                {user?.username}
               </h4>
               <button
                 onClick={() => handleCancelFriendReq(user._id)}
@@ -202,17 +202,17 @@ const ChatList: React.FC<ChatListProps> = ({
         <li
           key={user.sender._id}
           className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900"
-          onClick={() => onChatSelect(user.sender._id)}
+          onClick={() => onChatSelect(user.sender?._id)}
         >
           <img
             className="h-10 w-10 rounded-[50%]"
-            src={user.sender.avatar.url}
-            alt={user.sender.username[0]}
+            src={user.sender.avatar?.url}
+            alt={user.sender?.username[0]}
           />
           <span className="w-full flex flex-col gap-2">
             <span className="flex flex-row justify-between">
               <h4 className="my-auto text-black dark:text-white">
-                {user.sender.username}
+                {user.sender?.username}
               </h4>
               <span className="flex gap-3">
                 <button

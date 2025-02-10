@@ -48,7 +48,7 @@ function Login() {
       try {
         const response = await loginUser(email, password);
         if (response.data.statusCode == 200) {
-          auth?.login(response.data.data.loggedInUser);
+          auth?.login(response.data.data?.loggedInUser);
           navigate("/chat");
         }
       } catch (err: any) {
@@ -57,7 +57,7 @@ function Login() {
           err.response?.data?.message || "Login failed. Please try again.",
         );
         if (err.response?.data?.message) {
-          setEmailError(err.response.data.message);
+          setEmailError(err.response.data?.message);
         } else {
           setEmailError("Login failed. Please try again.");
         }

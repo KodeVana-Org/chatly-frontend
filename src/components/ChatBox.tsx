@@ -116,7 +116,7 @@ const ChatBox: React.FC = () => {
     try {
       const response = await getMessages(conversationId);
       if (response.data.statusCode === 200) {
-        setMessages(response.data.data.data || []);
+        setMessages(response.data.data?.data || []);
         fetchReceiverData();
       }
     } catch (error: any) {
@@ -133,8 +133,8 @@ const ChatBox: React.FC = () => {
       const response = await getUserData(receiverId);
       if (response.data.statusCode === 200) {
         setReceiverData({
-          username: response.data.data.username,
-          avatar: response.data.data.avatar.url,
+          username: response.data.data?.username,
+          avatar: response.data.data.avatar?.url,
         });
       }
     } catch (error: any) {
@@ -161,96 +161,101 @@ const ChatBox: React.FC = () => {
   return (
     <div className="mt-7 w-full bg-white dark:bg-black rounded-t-[2rem]">
       {/* Chat Header */}
-      <div className="flex justify-between items-center border-b border-slate-50">
-        <div className="p-7 flex flex-row gap-5">
-          <img
-            className="h-14 w-14 rounded-full"
-            src={receiverData.avatar}
-            alt={receiverData.username[0]}
-          />
-          <span className="flex gap-7 items-center">
-            <h4 className="font-medium text-[1.4rem] text-black dark:text-white">
-              {receiverData.username}
-            </h4>
-            {isOnline ? (
-              isTyping ? (
-                <p className="text-[0.8rem] text-gray-400">Typing...</p>
+      {conversationId ? (
+        <div className="flex justify-between items-center border-b border-slate-50">
+          <div className="p-7 flex flex-row gap-5">
+            <img
+              className="h-14 w-14 rounded-full"
+              src={receiverData.avatar}
+              alt={receiverData.username[0]}
+            />
+            <span className="flex gap-7 items-center">
+              <h4 className="font-medium text-[1.4rem] text-black dark:text-white">
+                {receiverData.username}
+              </h4>
+              {isOnline ? (
+                isTyping ? (
+                  <p className="text-[0.8rem] text-gray-400">Typing...</p>
+                ) : (
+                  <p className="text-[0.8rem] text-gray-400">Online</p>
+                )
               ) : (
-                <p className="text-[0.8rem] text-gray-400">Online</p>
-              )
-            ) : (
-              <p className="text-[0.8rem] text-gray-400">Offline</p>
-            )}
-          </span>
+                <p className="text-[0.8rem] text-gray-400">Offline</p>
+              )}
+            </span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <span></span>
+      )}
 
       {/* Chat Messages */}
       <div className="w-full h-[88vh] flex flex-col relative justify-between">
-        <div className="h-full flex flex-col justify-between">
-          <div className="mx-5 mb-1 bg-white dark:bg-black text-black dark:text-white h-full overflow-y-scroll">
-            <div className="mx-5 flex-1 overflow-y-auto p-4">
-              {messages.length > 0 ? (
-                messages.map((msg, index) => {
-                  const isSentByMe =
-                    msg.sender._id === myId || msg.sender === myId;
-                  return (
-                    <div
-                      key={index}
-                      className={`mb-4 p-3 rounded-t-xl shadow-md max-w-[75%] ${
-                        isSentByMe
-                          ? "w-fit max-w-[24rem] ml-auto bg-blue-500 text-white rounded-bl-xl"
-                          : "w-fit max-w-[24rem] mr-auto bg-gray-200 text-black dark:bg-gray-800 dark:text-white rounded-br-xl"
-                      }`}
-                    >
-                      {(msg.textMessage || msg.content) && (
-                        <p className="text-lg break-words whitespace-pre-wrap">
-                          {msg.textMessage || msg.content}
-                        </p>
-                      )}
-                      {msg.images &&
-                        msg.images.map((img, imgIndex) => (
-                          <div key={imgIndex} className="mt-2">
-                            <img
-                              src={img}
-                              alt={`Uploaded ${imgIndex}`}
-                              className="max-w-[300px] rounded-md"
-                            />
-                          </div>
-                        ))}
-                      {msg.caption && (
-                        <p className="text-gray-500 italic mt-1 break-words whitespace-pre-wrap">
-                          {msg.caption}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-center text-gray-400 mt-10">
-                  No messages yet
-                </p>
-              )}
-              <div ref={messagesEndRef} />
+        {conversationId ? (
+          <div className="h-full flex flex-col justify-between">
+            <div className="mx-5 mb-1 bg-white dark:bg-black text-black dark:text-white h-full overflow-y-scroll">
+              <div className="mx-5 flex-1 overflow-y-auto p-4">
+                {messages.length > 0 ? (
+                  messages.map((msg, index) => {
+                    const isSentByMe =
+                      msg.sender?._id === myId || msg.sender === myId;
+                    return (
+                      <div
+                        key={index}
+                        className={`mb-4 p-3 rounded-t-xl shadow-md max-w-[75%] ${
+                          isSentByMe
+                            ? "w-fit max-w-[24rem] ml-auto bg-blue-500 text-white rounded-bl-xl"
+                            : "w-fit max-w-[24rem] mr-auto bg-gray-200 text-black dark:bg-gray-800 dark:text-white rounded-br-xl"
+                        }`}
+                      >
+                        {(msg.textMessage || msg.content) && (
+                          <p className="text-lg break-words whitespace-pre-wrap">
+                            {msg.textMessage || msg.content}
+                          </p>
+                        )}
+                        {msg.images &&
+                          msg.images.map((img, imgIndex) => (
+                            <div key={imgIndex} className="mt-2">
+                              <img
+                                src={img}
+                                alt={`Uploaded ${imgIndex}`}
+                                className="max-w-[300px] rounded-md"
+                              />
+                            </div>
+                          ))}
+                        {msg.caption && (
+                          <p className="text-gray-500 italic mt-1 break-words whitespace-pre-wrap">
+                            {msg.caption}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-center text-gray-400 mt-10">
+                    No messages yet
+                  </p>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Message Input */}
+            <div className="mt-auto mb-7">
+              <TextControlBox
+                onMessageSend={handleSendMessage}
+                onTyping={handleTyping}
+                onStopTyping={handleStopTyping}
+              />
             </div>
           </div>
-
-          {/* Message Input */}
-          <div className="mt-auto mb-7">
-            <TextControlBox
-              onMessageSend={handleSendMessage}
-              onTyping={handleTyping}
-              onStopTyping={handleStopTyping}
-            />
+        ) : (
+          <div className="h-full w-full flex justify-center content-center items-center">
+            <h4 className="text-2xl font-semibold">
+              Welcome to the TAWK, it's an online conversation community.
+            </h4>
           </div>
-
-          {/* Typing Indicator */}
-          {isTyping && (
-            <div className="text-gray-500 italic text-sm ml-5">
-              {receiverId} is typing...
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

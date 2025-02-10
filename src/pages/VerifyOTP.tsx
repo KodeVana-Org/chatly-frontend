@@ -52,7 +52,7 @@ function VerifyOTP() {
           otp,
         );
         if (response.data.statusCode === 200) {
-          auth?.login(response.data.data.loggedInUser); // Save user data
+          auth?.login(response.data.data?.loggedInUser); // Save user data
           navigate("/chat");
         }
       } catch (err: any) {
