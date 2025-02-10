@@ -21,17 +21,23 @@ const ChatList: React.FC<ChatListProps> = ({
   onChatSelect,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [myId, setMyId] = useState(null);
   const [allFriendList, setAllFriendList] = useState<any[]>([]);
   const [userListWithoutFR, setUserListWithoutFR] = useState<any[]>([]);
   const [userListWithFR, setUserListWithFR] = useState<any[]>([]);
   const [incomingFRUsers, setIncomingFRUsers] = useState<any[]>([]);
 
   // Retrieve user ID
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const myId = user?._id;
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (storedUser?._id) {
+      setMyId(storedUser._id);
+    }
+  }, []);
 
-  // Fetch all users or friends
   const fetchUsers = useCallback(async () => {
+    if (!myId) return; // Prevent API call if myId is not available
+
     setIsLoading(true);
     try {
       if (isMyChatList && !isIncomingReq) {
@@ -64,7 +70,7 @@ const ChatList: React.FC<ChatListProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [isMyChatList, isIncomingReq, myId]); // Depend on necessary variables only
+  }, [isMyChatList, isIncomingReq, myId]);
 
   useEffect(() => {
     fetchUsers();
@@ -114,7 +120,7 @@ const ChatList: React.FC<ChatListProps> = ({
 
   return (
     <ul className="p-2 bg-white dark:bg-black">
-      {allFriendList.map((user) => (
+      {allFriendList?.map((user) => (
         <li
           key={user._id}
           className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer"

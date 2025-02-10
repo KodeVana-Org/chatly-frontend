@@ -6,12 +6,15 @@ import { IoMdLogOut } from "react-icons/io";
 import { IoSettingsOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.tsx";
+import { useNavigate } from "react-router-dom";
 
 interface NavbarProps {
   activeButton: "chat" | "calls" | "tweekie" | "settings" | "logout";
 }
 
 const Navbar: React.FC<NavbarProps> = ({ activeButton }) => {
+  const navigate = useNavigate();
+
   const auth = useAuth();
   if (!auth) {
     throw new Error("useAuth must be used within an AuthProvider");
@@ -19,6 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeButton }) => {
 
   const handleLogout = () => {
     auth.logout();
+    navigate("/login");
   };
 
   const getButtonStyles = (button: string) =>

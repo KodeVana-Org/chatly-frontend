@@ -1,12 +1,13 @@
+import { useState } from "react";
+import ReactLoading from "react-loading";
+import { useGoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { toast } from "react-toastify";
 import { loginUser } from "../api";
 import { LoginImg, Google } from "../assets";
 import { validateEmail, validatePassword } from "../validators";
-import { useGoogleLogin } from "@react-oauth/google";
-import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.tsx";
 
 function Login() {
@@ -43,10 +44,11 @@ function Login() {
 
     // Input field error validation
     if (isEmailValid && isPasswordValid) {
+      setIsLoading(true);
       try {
         const response = await loginUser(email, password);
         if (response.data.statusCode == 200) {
-          auth?.login(response.data.data.user);
+          auth?.login(response.data.data.loggedInUser);
           navigate("/chat");
         }
       } catch (err: any) {
@@ -136,12 +138,24 @@ function Login() {
                 Forgot password?
               </Link>
             </div>
-            <button
-              className="w-fit px-36 py-4 text-xl font-medium text-white items-center bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
-              type="submit"
-            >
-              Login
-            </button>
+
+            {isLoading ? (
+              <span className="pb-10">
+                <ReactLoading
+                  type={"balls"}
+                  color={"#000"}
+                  height={20}
+                  width={100}
+                />
+              </span>
+            ) : (
+              <button
+                className="w-fit px-36 py-4 text-xl font-medium text-white items-center bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
+                type="submit"
+              >
+                Login
+              </button>
+            )}
           </form>
           <div className="flex flex-col gap-5 content-center items-center">
             <span className="flex flex-col gap-5 content-center items-center">

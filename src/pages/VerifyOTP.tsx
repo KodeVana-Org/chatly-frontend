@@ -1,4 +1,5 @@
 import { useLocation } from "react-router-dom";
+import ReactLoading from "react-loading";
 import { verifyRegisterEmail } from "../api/index.ts";
 import { LoginImg } from "../assets/index.ts";
 import { validateOtp } from "../validators";
@@ -51,7 +52,7 @@ function VerifyOTP() {
           otp,
         );
         if (response.data.statusCode === 200) {
-          auth?.login(response); // Save user data
+          auth?.login(response.data.data.loggedInUser); // Save user data
           navigate("/chat");
         }
       } catch (err: any) {
@@ -171,12 +172,24 @@ function VerifyOTP() {
                 {otpError}
               </p>
             </div>
-            <button
-              className="w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
-              type="submit"
-            >
-              Verify OTP
-            </button>
+
+            {isLoading ? (
+              <span className="pb-10">
+                <ReactLoading
+                  type={"balls"}
+                  color={"#000"}
+                  height={20}
+                  width={100}
+                />
+              </span>
+            ) : (
+              <button
+                className="w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
+                type="submit"
+              >
+                Verify OTP
+              </button>
+            )}
           </form>
         </div>
       </div>

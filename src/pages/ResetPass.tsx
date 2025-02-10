@@ -1,3 +1,4 @@
+import ReactLoading from "react-loading";
 import { verifyResetOtp, resetPassword } from "../api/index.ts";
 import { LoginImg } from "../assets/index.ts";
 import { validateOtp, validatePassword } from "../validators";
@@ -92,7 +93,7 @@ function ForgotPass() {
         try {
           const response = await resetPassword(email, password);
           if (response.data.statusCode == 200) {
-            auth?.login(response); // Save user data
+            auth?.login(response.data.data.loggedInUser); // Save user data
             navigate("/chat");
           }
         } catch (err: any) {
@@ -195,7 +196,7 @@ function ForgotPass() {
             onSubmit={(e) => handleVerifyOtp(e)}
           >
             <div className="flex flex-col gap-2 text-center">
-              <span class="w-full flex flex-row items-center justify-center gap-3">
+              <span className="w-full flex flex-row items-center justify-center gap-3">
                 {[...Array(4)].map((_, index) => (
                   <input
                     key={index}
@@ -218,12 +219,23 @@ function ForgotPass() {
                 {otpError}
               </p>
             </div>
-            <button
-              className="w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
-              type="submit"
-            >
-              Verify OTP
-            </button>
+            {isLoading1 ? (
+              <span className="pb-10">
+                <ReactLoading
+                  type={"balls"}
+                  color={"#000"}
+                  height={20}
+                  width={100}
+                />
+              </span>
+            ) : (
+              <button
+                className="w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
+                type="submit"
+              >
+                Verify OTP
+              </button>
+            )}
           </form>
           <form
             className="w-[35rem] flex flex-col gap-7 content-center items-center"
@@ -280,13 +292,25 @@ function ForgotPass() {
                 {confirmPasswordError}
               </p>
             </div>
-            <button
-              className={`w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] rounded-[2rem] ${!verified ? "cursor-not-allowed" : "hover:bg-[#026fe3] cursor-pointer"}`}
-              type="submit"
-              disabled={!verified}
-            >
-              Save
-            </button>
+
+            {isLoading2 ? (
+              <span className="pb-10">
+                <ReactLoading
+                  type={"balls"}
+                  color={"#000"}
+                  height={20}
+                  width={100}
+                />
+              </span>
+            ) : (
+              <button
+                className={`w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] rounded-[2rem] ${!verified ? "cursor-not-allowed" : "hover:bg-[#026fe3] cursor-pointer"}`}
+                type="submit"
+                disabled={!verified}
+              >
+                Save
+              </button>
+            )}
           </form>
         </div>
       </div>

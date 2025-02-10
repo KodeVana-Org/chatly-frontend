@@ -1,3 +1,4 @@
+import ReactLoading from "react-loading";
 import { forgotPassword } from "../api/index.ts";
 import { validateEmail } from "../validators";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -89,12 +90,23 @@ function ForgotPass() {
             </p>
           </div>
           <div className="flex flex-col gap-5 content-center items-center">
-            <button
-              className="w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
-              type="submit"
-            >
-              Get OTP
-            </button>
+            {isLoading ? (
+              <span className="pb-10">
+                <ReactLoading
+                  type={"balls"}
+                  color={"#000"}
+                  height={20}
+                  width={100}
+                />
+              </span>
+            ) : (
+              <button
+                className="w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
+                type="submit"
+              >
+                Get OTP
+              </button>
+            )}
             <span className="flex flex-col gap-5 content-center items-center">
               <p className="text-black text-[18px]">Or sign in using</p>
               <button

@@ -89,13 +89,13 @@ const getFriends = () => {
   return apiClient.get("v1/friend/friends/" + myId);
 };
 // Send friend request
-const sendFdReq = (senderId: string, friendId: string) => {
+const sendFdReq = (senderId: string | null, friendId: string) => {
   return apiClient.post("v1/friend/sent-req/" + friendId, {
     senderId,
   });
 };
 // Cencel friend request
-const cancelFdReq = (senderId: string, recipientId: string) => {
+const cancelFdReq = (senderId: string | null, recipientId: string) => {
   return apiClient.delete("v1/friend/cancel-friend-req", {
     data: { senderId, recipientId },
   });

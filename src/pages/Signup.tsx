@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ReactLoading from "react-loading";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -216,12 +217,24 @@ function SignUp() {
                 {tAndCError}
               </p>
             </div>
-            <button
-              className="w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
-              type="submit"
-            >
-              Sign Up
-            </button>
+
+            {isLoading ? (
+              <span className="pb-10">
+                <ReactLoading
+                  type={"balls"}
+                  color={"#000"}
+                  height={20}
+                  width={100}
+                />
+              </span>
+            ) : (
+              <button
+                className="w-fit px-36 py-4 text-xl font-medium text-white bg-[#007BFF] hover:bg-[#026fe3] rounded-[2rem] cursor-pointer"
+                type="submit"
+              >
+                Sign Up
+              </button>
+            )}
           </div>
         </form>
         <div className="flex flex-col gap-5 content-center items-center">

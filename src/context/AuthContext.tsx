@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Function to log out
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    localStorage.clear();
   };
 
   return (
