@@ -33,6 +33,7 @@ function VerifyOTP() {
 
     if (isNaN(otp)) {
       setOtpError("Invalid OTP format. Please enter a valid numeric OTP.");
+      setIsLoading(false);
       return;
     }
 
@@ -60,6 +61,8 @@ function VerifyOTP() {
       } finally {
         setIsLoading(false);
       }
+    } else {
+      setIsLoading(false);
     }
   };
 

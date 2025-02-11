@@ -57,13 +57,15 @@ function Login() {
           err.response?.data?.message || "Login failed. Please try again.",
         );
         if (err.response?.data?.message) {
-          setEmailError(err.response.data?.message);
+          setEmailError(err.response.data.message);
         } else {
           setEmailError("Login failed. Please try again.");
         }
       } finally {
         setIsLoading(false);
       }
+    } else {
+      setIsLoading(false);
     }
   };
 

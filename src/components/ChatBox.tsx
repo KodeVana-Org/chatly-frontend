@@ -116,7 +116,7 @@ const ChatBox: React.FC = () => {
     try {
       const response = await getMessages(conversationId);
       if (response.data.statusCode === 200) {
-        setMessages(response.data.data?.data || []);
+        setMessages(response.data.data.data || []);
         fetchReceiverData();
       }
     } catch (error: any) {
@@ -133,8 +133,8 @@ const ChatBox: React.FC = () => {
       const response = await getUserData(receiverId);
       if (response.data.statusCode === 200) {
         setReceiverData({
-          username: response.data.data?.username,
-          avatar: response.data.data.avatar?.url,
+          username: response.data.data.username,
+          avatar: response.data.data.avatar.url,
         });
       }
     } catch (error: any) {
@@ -228,6 +228,7 @@ const ChatBox: React.FC = () => {
                             {msg.caption}
                           </p>
                         )}
+                        <div ref={messagesEndRef} />
                       </div>
                     );
                   })
@@ -236,7 +237,6 @@ const ChatBox: React.FC = () => {
                     No messages yet
                   </p>
                 )}
-                <div ref={messagesEndRef} />
               </div>
             </div>
 

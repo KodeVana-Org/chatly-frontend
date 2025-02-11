@@ -70,6 +70,8 @@ function ForgotPass() {
       } finally {
         setIsLoading1(false);
       }
+    } else {
+      setIsLoading1(false);
     }
   };
 
@@ -93,7 +95,7 @@ function ForgotPass() {
         try {
           const response = await resetPassword(email, password);
           if (response.data.statusCode == 200) {
-            auth?.login(response.data.data?.loggedInUser); // Save user data
+            auth?.login(response.data.data.loggedInUser); // Save user data
             navigate("/chat");
           }
         } catch (err: any) {
@@ -104,6 +106,8 @@ function ForgotPass() {
       } else {
         setConfirmPasswordError("Password doesn't match!");
       }
+    } else {
+      setIsLoading2(false);
     }
   };
 

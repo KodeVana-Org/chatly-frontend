@@ -86,6 +86,8 @@ function SignUp() {
       } else {
         setConfirmPasswordError("Password doesn't match!");
       }
+    } else {
+      setIsLoading(false);
     }
   };
 

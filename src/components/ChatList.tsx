@@ -73,7 +73,11 @@ const ChatList: React.FC<ChatListProps> = ({
   }, [isMyChatList, isIncomingReq, myId]);
 
   useEffect(() => {
-    fetchUsers();
+    const timeout = setTimeout(() => {
+      fetchUsers();
+    }, 100);
+
+    return () => clearTimeout(timeout);
   }, [fetchUsers]);
 
   // Handle send friend request
@@ -150,12 +154,11 @@ const ChatList: React.FC<ChatListProps> = ({
         <li
           key={user._id}
           className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900"
-          onClick={() => onChatSelect(user._id)}
         >
           <img
             className="h-10 w-10 rounded-[50%]"
             src={user.avatar?.url}
-            alt={user?.username}
+            alt={user?.username[0]}
           />
           <span className="w-full flex flex-col gap-2">
             <span className="flex flex-row justify-between">
@@ -176,12 +179,11 @@ const ChatList: React.FC<ChatListProps> = ({
         <li
           key={user._id}
           className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900"
-          onClick={() => onChatSelect(user._id)}
         >
           <img
             className="h-10 w-10 rounded-[50%]"
             src={user.avatar?.url}
-            alt={user?.username}
+            alt={user?.username[0]}
           />
           <span className="w-full flex flex-col gap-2">
             <span className="flex flex-row justify-between">
@@ -202,7 +204,6 @@ const ChatList: React.FC<ChatListProps> = ({
         <li
           key={user.sender._id}
           className="flex flex-row gap-5 px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-900"
-          onClick={() => onChatSelect(user.sender?._id)}
         >
           <img
             className="h-10 w-10 rounded-[50%]"
