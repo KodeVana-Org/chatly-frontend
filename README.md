@@ -1,50 +1,106 @@
-# React + TypeScript + Vite
+# Chat web application using React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Get Started
 
-Currently, two official plugins are available:
+```
+// Command to clone the repository
+clone https://github.com/KodeVana-Org/chatly-frontend.git
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### Navigations
 
 ```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
+const NAVIGATION = [
+  {
+    key: 0,
+    title: "chat",
+    icon: <Chat size={24} />,
+    path: "/dashboard",
   },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
+  {
+    key: 1,
+    title: "Calls",
+    icon: <Phone size={24} />,
+    path: "/dashboard/calls",
   },
-})
+  {
+    key: 2,
+    title: "Chat with AI",
+    icon: <OpenAiLogo size={24} />,
+    path: "/dashboard/ai",
+  },
+  {
+    key: 3,
+    title: "Toonify",
+    icon: <FinnTheHuman size={24} />,
+    path: "/dashboard/toonify",
+  },
+  {
+    key: 4,
+    title: "Profile",
+    icon: <UserCircle size={24} />,
+    path: "/dashboard/profile",
+  },
+];
 ```
+
+### Socket emmits
+
+```js
+return () => {
+  if (socket) {
+    socket.off("connect");
+    socket.off("error");
+    socket.off("user-disconnected");
+    socket.off("user-connected");
+    socket.off("chat-history");
+    socket.off("new-message");
+    socket.off("start-typing");
+    socket.off("stop-typing");
+
+    socket.disconnect();
+    console.log("Disconnected from socket server");
+  }
+};
+```
+
+### Supabase cloud storage
+
+```js
+export const uploadToSupabase = async (file) => {
+  const fileName = `${Date.now()}_${file.name}`;
+
+  // Determine the MIME type of the file
+  const contentType = file.type || "application/octet-stream";
+
+  const { data, error } = await supabase.storage
+    .from("chatly")
+    .upload(fileName, file, {
+      upsert: false,
+      cacheControl: "3600",
+      contentType,
+    });
+
+  if (error) {
+    throw new Error("Error uploading file: " + error.message);
+  }
+
+  const urlData = supabase.storage.from("chatly").getPublicUrl(fileName);
+
+  return urlData?.data?.publicUrl;
+};
+```
+
+### Tools in use
+
+- **toastify** for notification
+- **emoji-mart** for emoji conversations
+- **giphy** for interactive gif stickers
+- **phosphor-icons** for icon packs
+- **reduxjs** for state management
+- **axios** for api calls
+- **dropzone** for drag & drop
+- **react-audio-voice-recorder** for audio sharing in the chat
+- **socket.io-client** for streamlining chats
+- **wavesurfer.js** to show audio in wave structure
