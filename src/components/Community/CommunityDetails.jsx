@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { getAllCommunities, createPost, getPostsByCommunityId } from "./api";
+import { PaperPlaneTilt } from "@phosphor-icons/react";
 
 export default function CommunityDetail() {
   const { token } = useSelector((state) => state.auth);
@@ -49,24 +50,33 @@ export default function CommunityDetail() {
   if (!community) return <div className="p-4">Loading...</div>;
 
   return (
-    <div className="p-4 w-full md:w-2/3">
-      <h2 className="text-2xl font-bold mb-4">{community.name}</h2>
-      <p className="text-gray-600 mb-4">{community.description}</p>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">
-          Members ({community.members.length})
-        </h3>
-        <ul className="list-disc pl-5">
-          {community.members.map((memberId) => (
-            <li key={memberId} className="text-sm">
-              {memberId === user._id ? "You" : memberId}
-              {community.admins.includes(memberId) && " (Admin)"}
-              {community.creator === memberId && " (Creator)"}
-            </li>
-          ))}
-        </ul>
+    <div className="flex h-full flex-col border-l border-stroke dark:border-strokedark w-full">
+      <div className="sticky flex items-center flex-row border-b border-stroke dark:border-strokedark px-6 py-4.5">
+        <div className="flex gap-7 justify-center content-center items-center border-r border-stroke dark:border-strokedark pr-7">
+          <h2 className="text-2xl text-black dark:text-white font-bold">
+            {community.name}
+          </h2>
+          <p className="">{community.description}</p>
+        </div>
+        <div className="pl-7">
+          <h3 className="text-lg font-semibold text-black dark:text-white">
+            Members ({community.members.length})
+          </h3>
+          <div className="mb-4">
+            <ul className="list-disc pl-5">
+              {community.members.map((memberId) => (
+                <li key={memberId} className="text-sm">
+                  {memberId === user._id ? "You" : memberId}
+                  {community.admins.includes(memberId) && " (Admin)"}
+                  {community.creator === memberId && " (Creator)"}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
-      <div>
+
+      <div className="p-3">
         <h3 className="text-lg font-semibold mb-2">Posts</h3>
         <div className="mb-4">
           <textarea
@@ -105,6 +115,34 @@ export default function CommunityDetail() {
             </div>
           ))
         )}
+      </div>
+
+      <div className="sticky bottom-0 border-t border-stroke bg-white px-6 py-5 dark:border-strokedark dark:bg-boxdark">
+        <div className="flex items-center justify-between space-x-4.5">
+          <div className="relative w-full">
+            <input
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreatePost(e);
+              }}
+              type="text"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write a post..."
+              className="h-13 w-full rounded-md border border-stroke bg-gray pl-5 pr-19 text-black placeholder-body outline-none focus:border-primary dark:border-strokedark dark:bg-boxdark-2 dark:text-white"
+            />
+          </div>
+          <button
+            onClick={handleCreatePost}
+            disabled={!content}
+            className={`flex items-center justify-center h-13 w-13 rounded-md hover:bg-opacity-90 ${
+              !content
+                ? "bg-gray text-body dark:bg-boxdark-2 dark:text-body"
+                : "bg-primary text-white"
+            }`}
+          >
+            <PaperPlaneTilt size={24} weight="bold" />
+          </button>
+        </div>
       </div>
     </div>
   );

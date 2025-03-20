@@ -75,58 +75,63 @@ export default function CommunityList() {
   };
 
   return (
-    <div className="p-4 w-full md:w-1/3 border-r border-gray-200">
-      <h2 className="text-xl font-bold mb-4">Communities</h2>
-      <div className="mb-4">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Community Name"
-          className="w-full p-2 mb-2 border rounded"
-        />
-        <input
-          type="text"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description"
-          className="w-full p-2 mb-2 border rounded"
-        />
-        <button
-          onClick={handleCreate}
-          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Create Community
-        </button>
-      </div>
-      <ul className="space-y-2">
-        {communities.map((comm) => (
-          <li
-            key={comm._id}
-            className="p-2 bg-gray-100 rounded flex justify-between items-center"
+    <div className="h-full w-full flex">
+      <div className="p-5 h-full items-center border-r border-stroke dark:border-strokedark">
+        <h3 className="text-xl font-semibold mb-5">Create new community</h3>
+        <div className="mb-4">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Community Name"
+            className="w-full p-2 mb-2 border rounded"
+          />
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Description"
+            className="w-full p-2 mb-2 border rounded"
+          />
+          <button
+            onClick={handleCreate}
+            className="w-full p-2 bg-primary text-white rounded hover:bg-blue-600"
           >
-            <Link to={`/dashboard/community/${comm._id}`} className="flex-1">
-              <span className="font-medium">{comm.name}</span>
-              <p className="text-sm text-gray-600">{comm.description}</p>
-            </Link>
-            {comm.members.includes(user._id) ? (
-              <button
-                onClick={() => handleLeave(comm._id)}
-                className="ml-2 p-1 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Leave
-              </button>
-            ) : (
-              <button
-                onClick={() => handleJoin(comm._id)}
-                className="ml-2 p-1 bg-green-500 text-white rounded hover:bg-green-600"
-              >
-                Join
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+            Create Community
+          </button>
+        </div>
+      </div>
+      <div className="w-full p-5">
+        <h2 className="text-xl font-bold mb-4">Communities</h2>
+        <ul className="space-y-2">
+          {communities.map((comm) => (
+            <li
+              key={comm._id}
+              className="flex cursor-pointer items-center rounded px-4 py-2 dark:hover:bg-strokedark bg-gray dark:bg-boxdark-2 hover:bg-gray-2 dark:hover:bg-boxdark-2/90"
+            >
+              <Link to={`/dashboard/community/${comm._id}`} className="flex-1">
+                <span className="font-medium">{comm.name}</span>
+                <p className="text-sm text-gray-600">{comm.description}</p>
+              </Link>
+              {comm.members.includes(user._id) ? (
+                <button
+                  onClick={() => handleLeave(comm._id)}
+                  className="ml-2 py-1 px-2 bg-rose-500 text-white rounded hover:bg-rose-600"
+                >
+                  Leave
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleJoin(comm._id)}
+                  className="ml-2 p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  Join
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

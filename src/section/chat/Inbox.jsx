@@ -4,9 +4,7 @@ import {
   Gif,
   Microphone,
   PaperPlaneTilt,
-  Phone,
   VideoCamera,
-  List,
   User,
   Users,
 } from "@phosphor-icons/react";
@@ -270,7 +268,7 @@ export default function Inbox() {
                   </div>
                 ) : other_user?.avatar ? (
                   <img
-                    src={other_user?.avatar}
+                    src={other_user?.avatar ? other_user.avatar : User}
                     alt="avatar"
                     className="h-13 w-13 rounded-full object-cover object-center"
                   />

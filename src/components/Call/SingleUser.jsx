@@ -18,35 +18,26 @@ const SingleUser = () => {
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h2 style={{ fontSize: "24px", marginBottom: "20px", color: "#1f2937" }}>
+    <div className="w-full p-7">
+      <h2 className="mb-2.5 text-2xl font-semibold leading-[48px] text-black dark:text-white">
         Available Users
       </h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+      <div className="flex flex-col gap-7">
         {userList
           .filter((user) => user.id !== userId) // Exclude current user
           .map((user) => (
             <div
               key={user.id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "15px",
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-              }}
+              className="flex w-full justify-between cursor-pointer items-center rounded px-4 py-3 bg-gray dark:bg-boxdark-2 dark:hover:bg-strokedark hover:bg-gray-2 dark:hover:bg-boxdark-2/90"
             >
-              <div>
-                <p style={{ margin: 0, fontWeight: "500", color: "#1f2937" }}>
+              <div className="flex flex-col gap-2">
+                <p className="text-md font-medium text-black dark:text-white">
                   {user.name}
                 </p>
-                <p style={{ margin: 0, fontWeight: "500", color: "red" }}>
+                <p
+                  className={`text-sm font-medium ${user.status === "Online" ? "text-green-500" : "text-red-500"}`}
+                >
                   {user.status}
-                </p>
-                <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
-                  UserId: {user.id}
                 </p>
               </div>
               <div>
