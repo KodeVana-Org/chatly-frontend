@@ -1,14 +1,16 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 import { toast } from "react-toastify";
-import socket from "../../socket/socketConnection";
 
 const initialState = {
   isLoading: false,
   error: null,
   token: null,
-  user: {},
+  userId: null,
   isLoggedIn: false,
+  userList: [],
+  socket: null,
+  socketId: null,
 };
 
 const slice = createSlice({
@@ -21,8 +23,8 @@ const slice = createSlice({
     setLoading(state, action) {
       state.isLoading = action.payload;
     },
-    fetchUserSuccess(state, action) {
-      state.user = action.payload;
+    setUserId(state, action) {
+      state.userId = action.payload;
     },
     loginSuccess(state, action) {
       state.isLoggedIn = true;
@@ -32,13 +34,65 @@ const slice = createSlice({
       state.isLoggedIn = false;
       state.token = null;
     },
+    setUserList(state, action) {
+      state.userList = action.payload;
+    },
+    setSocket: (state, action) => {
+      state.socket = action.payload;
+      state.socketId = action.payload?.id || null;
+    },
+    removeSocket: (state) => {
+      if (state.socket) {
+        state.socket.disconnect();
+      }
+      state.socket = null;
+      state.socketId = null;
+    },
   },
 });
 
 export default slice.reducer;
 
-const { setError, setLoading, loginSuccess, logoutSuccess } =
-  slice.actions;
+const {
+  setError,
+  setLoading,
+  loginSuccess,
+  logoutSuccess,
+  setUserList,
+  setSocket,
+  removeSocket,
+  setUserId,
+} = slice.actions;
+
+/*
+ * ADD THIS TWO FUNCTION FOR CALLING FROM index.js
+ */
+export function initializeSocket(socket) {
+  return async (dispatch) => {
+    dispatch(setSocket(socket));
+  };
+}
+export function disconnectSocket() {
+  return async (dispatch, getState) => {
+    const { socket } = getState().auth;
+    if (socket) {
+      socket.disconnect();
+    }
+    dispatch(removeSocket());
+  };
+}
+
+export function setId(data) {
+  return async (dispatch) => {
+    dispatch(setUserId(data));
+  };
+}
+
+export function updateUserList(data) {
+  return async (dispatch, getState) => {
+    dispatch(setUserList(data));
+  };
+}
 
 // ** WORKING
 export function RegisterUser(formValues, navigate) {
@@ -55,7 +109,7 @@ export function RegisterUser(formValues, navigate) {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       )
       .then(function (response) {
         console.log(response);
@@ -69,7 +123,7 @@ export function RegisterUser(formValues, navigate) {
       })
       .finally(() => {
         dispatch(setLoading(false));
-        //  do navigation logic over here
+        // do navigation logic over here
         if (!getState().auth.error) {
           navigate(`/auth/verify?email=${formValues.email}`);
         }
@@ -93,7 +147,7 @@ export function ResendOTP(email) {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       )
       .then(function (response) {
         console.log(response);
@@ -127,7 +181,7 @@ export function VerifyOTP(formValues, navigate) {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       )
       .then(function (response) {
         console.log(response.data);
@@ -145,7 +199,7 @@ export function VerifyOTP(formValues, navigate) {
       })
       .finally(() => {
         dispatch(setLoading(false));
-        //  do navigation logic over here
+        // do navigation logic over here
         if (!getState().auth.error) {
           navigate(`/dashboard`);
         }
@@ -182,14 +236,15 @@ export function LoginUser(formValues, navigate) {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       )
       .then(function (response) {
         console.log(response.data);
 
-        const { token, message } = response.data;
+        const { token, message, user_id } = response.data;
 
         dispatch(loginSuccess(token));
+        dispatch(setId(user_id));
 
         toast.success(message || "Logged in successfully!");
       })
@@ -200,7 +255,7 @@ export function LoginUser(formValues, navigate) {
       })
       .finally(() => {
         dispatch(setLoading(false));
-        //  do navigation logic over here
+        // do navigation logic over here
         if (!getState().auth.error) {
           navigate(`/dashboard`);
         }

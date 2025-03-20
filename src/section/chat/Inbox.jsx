@@ -4,8 +4,11 @@ import {
   Gif,
   Microphone,
   PaperPlaneTilt,
+  Phone,
+  VideoCamera,
   List,
   User,
+  Users,
 } from "@phosphor-icons/react";
 import EmojiPicker from "../../components/EmojiPicker";
 import UserInfo from "./UserInfo";
@@ -30,120 +33,100 @@ import {
 } from "../../socket/socketConnection";
 import { format } from "date-fns";
 import dateFormat, { masks } from "dateformat";
-// import VideoRoom from "../../components/VideoRoom";
+import VideoRoom from "../../components/VideoRoom";
 // import AudioRoom from "../../components/AudioRoom";
 
 export default function Inbox() {
   const dispatch = useDispatch();
-  const [userInfoOpen, setUserInfoOpen] = useState(true);
-
+  const [userInfoOpen, setUserInfoOpen] = useState(false);
   const containerRef = useRef(null);
+  const [scheduledMessages, setScheduledMessages] = useState([]); // New state for scheduled messages NOTE:
 
-  // Logged In user - ME
   const { user } = useSelector((state) => state.user);
-
   const { currentConversation, conversations, typing } = useSelector(
-    (state) => state.chat
+    (state) => state.chat,
   );
 
   const [isTyping, setIsTyping] = useState(false);
 
   const this_conversation = conversations.find(
-    (el) => el._id?.toString() === currentConversation?.toString()
+    (el) => el._id?.toString() === currentConversation?.toString(),
   );
 
-  console.log(this_conversation?.messages, "this conversation messages");
-
-  let other_user;
-
-  if (this_conversation) {
-    other_user = this_conversation.participants.find((e) => e._id !== user._id);
-  }
+  // Define other_user early; null for group chats
+  const other_user = this_conversation?.isGroup
+    ? null
+    : this_conversation?.participants?.find((e) => e._id !== user._id);
 
   // Handle typing event
   useEffect(() => {
-    if (isTyping) {
-      // emit start-typing event
-
-      const startTypingData = {
-        userId: other_user?._id,
+    if (isTyping && currentConversation) {
+      const typingData = {
+        userId: other_user?._id || null, // Null for group chats
         conversationId: currentConversation,
       };
 
-      emitStartTyping(startTypingData);
+      emitStartTyping(typingData);
 
       const timeout = setTimeout(() => {
-        // emit stop-typing event
-
-        const stopTypingData = {
-          userId: other_user?._id,
-          conversationId: currentConversation,
-        };
-
-        emitStopTyping(stopTypingData);
-
+        emitStopTyping(typingData);
         setIsTyping(false);
       }, 2000);
 
       return () => clearTimeout(timeout);
     }
-  }, [isTyping]);
+  }, [isTyping, currentConversation, other_user]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       getDirectChatHistory({ conversationId: currentConversation });
-    }, 5000); // 5000 milliseconds = 5 seconds
-
-    // Cleanup function to clear timeout if the component unmounts
+    }, 5000);
     return () => clearTimeout(timeoutId);
   }, [currentConversation]);
 
+  // Check and send scheduled messages NOTE:
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      setScheduledMessages((prev) =>
+        prev.filter((msg) => {
+          if (new Date(msg.sendAt) <= now) {
+            handleSendMsg(null, msg.content); // Send scheduled message
+            return false; // Remove from list
+          }
+          return true; // Keep in list
+        }),
+      );
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [scheduledMessages]);
+
   const [videoCall, setVideoCall] = useState(false);
-  const [audioCall, setAudioCall] = useState(false);
-
-  const handleToggleVideo = () => {
-    setVideoCall((p) => !p);
-  };
-  const handleToggleAudio = () => {
-    setAudioCall((p) => !p);
-  };
-
+  // const [audioCall, setAudioCall] = useState(false);
   const [gifOpen, setGifOpen] = useState(false);
 
+  const handleToggleVideo = () => setVideoCall((p) => !p);
+  // const handleToggleAudio = () => setAudioCall((p) => !p);
   const handleToggleGif = (e) => {
     e.preventDefault();
     setGifOpen((prev) => !prev);
   };
-
-  const handleToggleUserInfo = () => {
-    setUserInfoOpen((prev) => !prev);
-  };
-
+  const handleToggleUserInfo = () => setUserInfoOpen((prev) => !prev);
   const handleMicClick = (e) => {
     e.preventDefault();
-
     dispatch(ToggleAudioModal(true));
   };
-
-  const thisConversation = conversations.find(
-    (el) => el._id === currentConversation
-  );
-
-  const this_user = thisConversation?.participants?.find(
-    (e) => e._id !== user._id
-  );
 
   const [inputValue, setInputValue] = useState("");
 
   const handleInputChange = (e) => {
-    if (!isTyping) {
-      setIsTyping(true);
-    }
+    if (!isTyping) setIsTyping(true);
     setInputValue(e.target.value);
   };
 
   const handleEmojiSelect = (emoji) => {
-    setInputValue((prev) => prev + emoji.native); // Append selected emoji to input value
+    setInputValue((prev) => prev + emoji.native);
   };
 
   function formatTime(dateString) {
@@ -152,106 +135,122 @@ export default function Inbox() {
   }
 
   const MSG_LIST = this_conversation?.messages
-    ? this_conversation.messages.map((msg) => {
-        const incoming = msg.author === user._id ? false : true;
-        const authorName = incoming ? other_user?.name : user.name;
-        const content = msg?.content;
-        const timestamp = formatTime(msg.date);
-        const type = msg?.type;
-        const id = msg?._id;
+    ? this_conversation.messages
+        .map((msg) => {
+          const incoming = msg.author === user._id ? false : true;
+          const author = this_conversation?.participants?.find(
+            (p) => p._id === msg.author,
+          );
+          const authorName = incoming
+            ? this_conversation?.isGroup
+              ? author?.name || "Unknown"
+              : other_user?.name || "Unknown"
+            : user.name;
+          const content = msg?.content;
+          const timestamp = formatTime(msg.date);
+          const type = msg?.type;
+          const id = msg?._id;
 
-        switch (msg.type) {
-          case "Text":
-            return {
-              id,
-              incoming,
-              content,
-              timestamp,
-              authorName,
-              type,
-              date: msg?.date,
-            };
-
-          case "Document":
-            return {
-              id,
-              incoming,
-              content,
-              timestamp,
-              authorName,
-              type,
-              document: msg.document,
-              date: msg?.date,
-            };
-
-          case "Media":
-            return {
-              id,
-              incoming,
-              content,
-              timestamp,
-              authorName,
-              type,
-              media: msg.media,
-              date: msg?.date,
-            };
-
-          case "Giphy":
-            return {
-              id,
-              incoming,
-              content,
-              timestamp,
-              authorName,
-              type,
-              giphy: msg.giphyUrl,
-              date: msg?.date,
-            };
-
-          case "Audio":
-            return {
-              id,
-              incoming,
-              content,
-              timestamp,
-              authorName,
-              type,
-              audioUrl: msg?.audioUrl,
-              date: msg?.date,
-            };
-
-          default:
-            break;
-        }
-      })
+          switch (type) {
+            case "Text":
+              return {
+                id,
+                incoming,
+                content,
+                timestamp,
+                authorName,
+                type,
+                date: msg?.date,
+              };
+            case "Document":
+              return {
+                id,
+                incoming,
+                content,
+                timestamp,
+                authorName,
+                type,
+                document: msg.document,
+                date: msg?.date,
+              };
+            case "Media":
+              return {
+                id,
+                incoming,
+                content,
+                timestamp,
+                authorName,
+                type,
+                media: msg.media,
+                date: msg?.date,
+              };
+            case "Giphy":
+              return {
+                id,
+                incoming,
+                content,
+                timestamp,
+                authorName,
+                type,
+                giphy: msg.giphyUrl,
+                date: msg?.date,
+              };
+            case "Audio":
+              return {
+                id,
+                incoming,
+                content,
+                timestamp,
+                authorName,
+                type,
+                audioUrl: msg?.audioUrl,
+                date: msg?.date,
+              };
+            default:
+              return null;
+          }
+        })
+        .filter(Boolean)
     : [];
 
   useEffect(() => {
-    // Scroll to the bottom of the container on mount
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [currentConversation, MSG_LIST]);
 
-  const handleSendMsg = (e) => {
-    // prevent page reload
-    // e.preventDefault();
-
-    if (inputValue) {
+  const handleSendMsg = (e, scheduledContent = null) => {
+    console.log("sending message");
+    const content = scheduledContent || inputValue; // Use scheduled content if provided
+    if (content) {
       const data = {
         conversationId: currentConversation,
         message: {
           author: user._id,
           type: "Text",
-          content: inputValue,
+          content: content,
         },
       };
-
       sendDirectMessage(data);
-
-      setInputValue("");
+      if (!scheduledContent) setInputValue(""); // Only clear input for manual send
     }
   };
+
+  //const handleSendMsg = (e) => { TODO: old one
+  //  console.log("sending message");
+  //  if (inputValue) {
+  //    const data = {
+  //      conversationId: currentConversation,
+  //      message: {
+  //        author: user._id,
+  //        type: "Text",
+  //        content: inputValue,
+  //      },
+  //    };
+  //    sendDirectMessage(data);
+  //    setInputValue("");
+  //  }
+  //};
 
   return (
     <>
@@ -259,50 +258,67 @@ export default function Inbox() {
         <div
           className={`flex h-full flex-col border-l border-stroke dark:border-strokedark w-full ${
             userInfoOpen ? "xl:w-1/2" : "xl:w-3/4"
-          } `}
+          }`}
         >
           {/* Chat header */}
           <div className="sticky flex items-center flex-row justify-between border-b border-stroke dark:border-strokedark px-6 py-4.5">
             <div className="flex items-center" onClick={handleToggleUserInfo}>
               <div className="mr-4.5 h-13 w-full max-w-13 overflow-hidden rounded-full">
-                {this_user?.avatar ? (
+                {this_conversation?.isGroup ? (
+                  <div className="h-13 w-13 rounded-full bg-gray-300 flex items-center justify-center">
+                    <Users size={24} color="#fff" />
+                  </div>
+                ) : other_user?.avatar ? (
                   <img
-                    src={this_user?.avatar}
+                    src={other_user?.avatar}
                     alt="avatar"
                     className="h-13 w-13 rounded-full object-cover object-center"
                   />
                 ) : (
-                  <div
-                    className={`h-11 w-11 rounded-full border border-stroke dark:border-strokedark bg-gray dark:bg-boxdark flex items-center justify-center text-body dark:text-white capitalize`}
-                  >
-                    {this_user?.name.charAt(0)}
+                  <div className="h-11 w-11 rounded-full border border-stroke dark:border-strokedark bg-gray dark:bg-boxdark flex items-center justify-center text-body dark:text-white capitalize">
+                    {other_user?.name?.charAt(0) || "?"}
                   </div>
                 )}
               </div>
-
               <div>
                 <h5 className="font-medium text-black dark:text-white text-nowrap">
-                  {this_user?.name}
+                  {this_conversation?.isGroup
+                    ? this_conversation.groupName
+                    : other_user?.name || "Unknown"}
                 </h5>
-                {typing?.conversationId && typing?.typing ? (
-                  <p className={`text-sm`}>Typing...</p>
+                {this_conversation?.isGroup ? (
+                  <p className="text-sm text-gray-500">Group Chat</p>
+                ) : typing?.conversationId === currentConversation &&
+                  typing?.typing ? (
+                  <p className="text-sm text-gray-500">Typing...</p>
                 ) : (
                   <div
                     className={`text-sm font-medium ${
-                      this_user?.status === "Online"
+                      other_user?.status === "Online"
                         ? "text-green-500"
-                        : "text-red"
+                        : "text-red-500"
                     }`}
                   >
-                    {this_user?.status}
+                    {other_user?.status}
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Audio/Video call */}
+            <div className="flex gap-5 pr-7">
+              {/* 
+              <button onClick={handleToggleAudio}>
+                <Phone size={24} />
+              </button>
+              */}
+              <button onClick={handleToggleVideo}>
+                <VideoCamera size={24} />
+              </button>
+            </div>
           </div>
 
-          {/* list of messages */}
-
+          {/* Message list */}
           <div
             ref={containerRef}
             className="max-h-full space-y-3.5 overflow-y-auto no-scrollbar px-6 py-7.5 grow"
@@ -321,71 +337,69 @@ export default function Inbox() {
                       case "Text":
                         return (
                           <TextMessage
-                            author={message.author}
+                            author={message.authorName}
                             content={message.content}
                             incoming={message.incoming}
                             timestamp={message.timestamp}
+                            isGroup={this_conversation?.isGroup} // Pass isGroup
                           />
                         );
-
                       case "Giphy":
                         return (
                           <GiphyMessage
-                            author={message.author}
+                            author={message.authorName}
                             content={message.content}
                             incoming={message.incoming}
                             timestamp={message.timestamp}
                             giphy={message.giphy}
+                            isGroup={this_conversation?.isGroup} // Pass isGroup
                           />
                         );
-
                       case "Document":
                         return (
                           <DocumentMessage
-                            author={message.author}
+                            author={message.authorName}
                             content={message.content}
                             incoming={message.incoming}
                             timestamp={message.timestamp}
                             documentFile={message.document}
+                            isGroup={this_conversation?.isGroup} // Pass isGroup
                           />
                         );
-
                       case "Audio":
                         return (
                           <VoiceMessage
-                            author={message.author}
+                            author={message.authorName}
                             content={message.content}
                             incoming={message.incoming}
                             timestamp={message.timestamp}
-                            document={message.document}
                             audioUrl={message.audioUrl}
+                            isGroup={this_conversation?.isGroup} // Pass isGroup
                           />
                         );
                       case "Media":
-                        console.log(message, "This is media msg");
                         return (
                           <MediaMessage
                             incoming={message.incoming}
-                            author={message.author}
+                            author={message.authorName}
                             timestamp={message.timestamp}
                             media={message.media}
                             caption={message.content}
+                            isGroup={this_conversation?.isGroup} // Pass isGroup
                           />
                         );
-
                       default:
-                        break;
+                        return null;
                     }
                   })()}
                 </React.Fragment>
               );
             })}
-
-            {typing?.conversationId && typing?.typing && <TypingIndicator />}
+            {typing?.conversationId === currentConversation &&
+              typing?.typing && <TypingIndicator />}
           </div>
 
-          {/* Input  */}
-
+          {/* Input */}
           <div className="sticky bottom-0 border-t border-stroke bg-white px-6 py-5 dark:border-strokedark dark:bg-boxdark">
             <div className="flex items-center justify-between space-x-4.5">
               <div className="relative w-full">
@@ -393,15 +407,12 @@ export default function Inbox() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleSendMsg(e);
                   }}
-                  type=""
                   value={inputValue}
                   onChange={handleInputChange}
                   placeholder="Send Message..."
-                  className="h-13 w-full rounded-md border border-stroke bg-gray pl-5 pr-19 text-black placeholder-body outline-none focus:border-primary
-                dark:border-strokedark dark:bg-boxdark-2 dark:text-white"
+                  className="h-13 w-full rounded-md border border-stroke bg-gray pl-5 pr-19 text-black placeholder-body outline-none focus:border-primary dark:border-strokedark dark:bg-boxdark-2 dark:text-white"
                 />
-
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 items-center justify-end space-x-4">
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center space-x-4">
                   <button
                     onClick={handleMicClick}
                     className="hover:text-primary"
@@ -414,21 +425,13 @@ export default function Inbox() {
                   <button onClick={handleToggleGif}>
                     <Gif size={20} />
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                    }}
-                    className="hover:text-primary"
-                  >
-                    <EmojiPicker onSelectEmoji={handleEmojiSelect} />
-                  </button>
+                  <EmojiPicker onSelectEmoji={handleEmojiSelect} />
                 </div>
               </div>
-
               <button
                 onClick={handleSendMsg}
                 disabled={!inputValue}
-                className={`flex items-center justify-center h-13 max-w-13 w-full rounded-md  hover:bg-opacity-90 ${
+                className={`flex items-center justify-center h-13 w-13 rounded-md hover:bg-opacity-90 ${
                   !inputValue
                     ? "bg-gray text-body dark:bg-boxdark-2 dark:text-body"
                     : "bg-primary text-white"
@@ -437,16 +440,13 @@ export default function Inbox() {
                 <PaperPlaneTilt size={24} weight="bold" />
               </button>
             </div>
-
             {gifOpen && <Giphy />}
           </div>
         </div>
       ) : (
         <div className="flex flex-row items-center justify-center w-full xl:w-3/4 border-l border-stroke dark:border-strokedark">
           <div className="flex flex-col space-y-4 items-center justify-center">
-            {/* Illustration */}
             <ChatTeardropSlash size={100} />
-            {/* Text */}
             <span className="text-lg font-semibold">
               No Conversation Selected
             </span>
@@ -458,17 +458,23 @@ export default function Inbox() {
         <VideoRoom open={videoCall} handleClose={handleToggleVideo} />
       )}
 
+      {/*
       {audioCall && (
         <AudioRoom open={audioCall} handleClose={handleToggleAudio} />
       )}
+      */}
 
       {currentConversation && userInfoOpen && (
-        <div className="xl:w-1/4">
-          <UserInfo
-            user={this_user}
-            handleToggleUserInfo={handleToggleUserInfo}
-          />
-        </div>
+        <UserInfo
+          user={other_user}
+          group={this_conversation} // Use other_user here too (this_converstion)
+          handleToggleUserInfo={handleToggleUserInfo}
+          sendDirectMessage={sendDirectMessage} // Pass socket function
+          handleSendMsg={handleSendMsg} // Pass send function
+          currentConversation={currentConversation} // Pass conversation ID
+          setScheduledMessages={setScheduledMessages} // Pass setter for scheduled messages
+          scheduledMessages={scheduledMessages} // for listing all shedules
+        />
       )}
     </>
   );

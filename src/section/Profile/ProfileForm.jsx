@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import UserOne from "../../images/user/user-01.png";
 import { Camera } from "@phosphor-icons/react";
 import SelectInput from "../../components/Form/SelectInput";
 import { uploadToSupabase } from "../../utils/supabase"; // Supabase utility for image upload
@@ -20,9 +19,8 @@ export default function ProfileForm() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
 
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar ? user.avatar : UserOne);
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar);
   const [imageFile, setImageFile] = useState(null);
-
 
   const defaultValues = {
     name: user?.name || "",
@@ -55,7 +53,7 @@ export default function ProfileForm() {
         dispatch(
           UpdateAvatar({
             avatar: publicUrl,
-          })
+          }),
         );
       } catch (error) {
         console.error("Error uploading avatar:", error);

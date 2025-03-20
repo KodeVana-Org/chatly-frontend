@@ -22,7 +22,7 @@ const ToonifyPage = () => {
       setImageUrls({ original_url: "", generated_url: "" });
 
       const response = await axios.post(
-        "http://localhost:6969/api/v1/friend/upload",
+        "http://localhost:6996/user/avatar",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

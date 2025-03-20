@@ -1,8 +1,12 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import NodeStdlibBrowser from "vite-plugin-node-stdlib-browser";
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), NodeStdlibBrowser()],
+  resolve: {
+    alias: {
+      global: "vite-plugin-node-stdlib-browser/global",
+    },
+  },
 });

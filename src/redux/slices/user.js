@@ -31,27 +31,35 @@ const { setError, setLoading, fetchUserSuccess } = slice.actions;
 // GET ME
 export function GetMe() {
   return async (dispatch, getState) => {
+    const token = getState().auth.token;
+
+    // Check if the token is null or undefined
+    if (!token) {
+      console.warn("Token is null or undefined. Skipping API call.");
+      dispatch(setError("No token available. Please log in."));
+      toast.error("No token available. Please log in.");
+      dispatch(setLoading(false)); // Ensure loading is set to false
+      return; // Exit the function early
+    }
+
     dispatch(setError(null));
     dispatch(setLoading(true));
-    await axios
-      .get("/user/me", {
+
+    try {
+      const response = await axios.get("/user/me", {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getState().auth.token}`,
+          Authorization: `Bearer ${token}`,
         },
-      })
-      .then(function (response) {
-        console.log(response);
-        dispatch(fetchUserSuccess(response?.data?.data?.user));
-      })
-      .catch(function (error) {
-        console.log(error);
-        dispatch(setError(error));
-        toast.error(error?.message || "Something went wrong!");
-      })
-      .finally(() => {
-        dispatch(setLoading(false));
       });
+      dispatch(fetchUserSuccess(response?.data?.data?.user));
+    } catch (error) {
+      console.log(error);
+      dispatch(setError(error));
+      toast.error(error?.message || "Something went wrong!");
+    } finally {
+      dispatch(setLoading(false));
+    }
   };
 }
 
@@ -72,7 +80,7 @@ export function UpdateMe(formValues) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${getState().auth.token}`,
           },
-        }
+        },
       )
       .then(function (response) {
         console.log(response);
@@ -108,7 +116,7 @@ export function UpdatePassword(formValues, handleLogout) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${getState().auth.token}`,
           },
-        }
+        },
       )
       .then(function (response) {
         console.log(response);
@@ -145,7 +153,7 @@ export function UpdateAvatar(formValues) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${getState().auth.token}`,
           },
-        }
+        },
       )
       .then(function (response) {
         console.log(response);

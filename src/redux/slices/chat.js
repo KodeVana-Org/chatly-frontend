@@ -21,7 +21,7 @@ const slice = createSlice({
     },
     startConversationSuccess(state, action) {
       const prevConversation = state.conversations.find(
-        (el) => el._id === action.payload._id
+        (el) => el._id === action.payload._id,
       );
 
       if (prevConversation) {
@@ -85,8 +85,8 @@ const slice = createSlice({
       });
     },
     updateTyping(state, action) {
-      state.typing = action.payload
-    }
+      state.typing = action.payload;
+    },
   },
 });
 
@@ -107,9 +107,9 @@ const {
 
 // UPDATE TYPING
 export function UpdateTypingStatus(data) {
-  return async(dispatch, getState) => {
+  return async (dispatch, getState) => {
     dispatch(updateTyping(data));
-  }
+  };
 }
 
 // ADD MESSAGE
@@ -174,10 +174,10 @@ export function StartConversation(formValues) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${getState().auth.token}`,
           },
-        }
+        },
       )
       .then(function (response) {
-        console.log(response);
+        console.log("startConverstion: ", response);
         dispatch(startConversationSuccess(response?.data?.data?.conversation));
         // dispatch(fetchUsersSuccess(response?.data?.data?.users));
       })
@@ -205,9 +205,9 @@ export function GetConversations() {
         },
       })
       .then(function (response) {
-        console.log(response);
+        console.log("/user/conversations: ", response);
         dispatch(
-          fetchConversationsSuccess(response?.data?.data?.conversations)
+          fetchConversationsSuccess(response?.data?.data?.conversations),
         );
       })
       .catch(function (error) {

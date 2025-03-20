@@ -29,7 +29,7 @@ const NAVIGATION = [
   },
   {
     key: 2,
-    title: "Chat with AI",
+    title: "AI",
     icon: <OpenAiLogo size={24} />,
     path: "/dashboard/ai",
   },
@@ -44,6 +44,12 @@ const NAVIGATION = [
     title: "Profile",
     icon: <UserCircle size={24} />,
     path: "/dashboard/profile",
+  },
+  {
+    key: 5,
+    title: "Community",
+    icon: <UserCircle size={24} />,
+    path: "/dashboard/community",
   },
 ];
 
@@ -89,9 +95,7 @@ export default function Sidebar() {
               {icon}
             </div>
             <span
-              className={`font-medium text-sm ${
-                selected === key && "text-primary"
-              }`}
+              className={`font-medium text-sm ${selected === key && "text-primary"}`}
             >
               {title}
             </span>
@@ -110,7 +114,8 @@ export default function Sidebar() {
           onClick={() => {
             dispatch(LogoutUser(navigate));
           }}
-          className="w-full flex flex-row items-center justify-center border rounded-md border-stroke p-2 dark:border-strokedark hover:bg-stone-100 hover:cursor-pointer"
+          className="w-full flex flex-row items-center justify-center border rounded-md border-stroke p-2
+            dark:border-strokedark hover:bg-stone-100 hover:cursor-pointer"
         >
           <SignOut size={24} />
         </button>

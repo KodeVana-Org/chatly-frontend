@@ -3,6 +3,11 @@ import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { useDispatch, useSelector } from "react-redux";
 import { connectWithSocketServer } from "../socket/socketConnection";
+import {
+  disconnectSocket,
+  initializeSocket,
+  updateUserList,
+} from "../redux/slices/auth";
 import { toast } from "react-toastify";
 import {
   AddMessage,
@@ -18,6 +23,7 @@ export default function index() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isLoggedIn, token } = useSelector((state) => state.auth);
+  const socketId = useSelector((state) => state.auth.socketId);
 
   const [openSidebar, setOpenSidebar] = useState(false);
 
@@ -45,6 +51,7 @@ export default function index() {
       socket.on("connect", () => {
         console.log("succesfully connected with socket.io server");
         console.log(socket.id);
+        dispatch(initializeSocket(socket));
       });
 
       // ** WORKING
@@ -64,36 +71,37 @@ export default function index() {
         // ? DATA FORMAT
 
         // data = {
-        //   message: `User ${user.name} has gone offline.`,
-        //   userId: user._id,
-        //   status: "Offline",
+        // message: `User ${user.name} has gone offline.`,
+        // userId: user._id,
+        // status: "Offline",
         // }
 
         dispatch(
           UpdateStatus({
             userId: data.userId,
             status: data.status,
-          })
+          }),
         );
       });
 
       // ** WORKING
       socket.on("user-connected", (data) => {
         console.log(data, "user-connected");
+        //dispatch(updateUserList(data));
 
         // ? DATA FORMAT
 
         // data = {
-        //   message: `User ${user.name} has connected.`,
-        //   userId: user._id,
-        //   status: "Online",
+        // message: `User ${user.name} has connected.`,
+        // userId: user._id,
+        // status: "Online",
         // };
 
         dispatch(
           UpdateStatus({
             userId: data.userId,
             status: data.status,
-          })
+          }),
         );
       });
 
@@ -104,8 +112,8 @@ export default function index() {
         // ? DATA FORMAT
 
         // data = {
-        //   conversationId,
-        //   history: conversation.messages,
+        // conversationId,
+        // history: conversation.messages,
         // };
 
         dispatch(FetchChatHistory(data));
@@ -118,8 +126,8 @@ export default function index() {
         // ? DATA FORMAT
 
         // data = {
-        //   conversationId: conversationId,
-        //   message: newMessage,
+        // conversationId: conversationId,
+        // message: newMessage,
         // }
 
         dispatch(AddMessage(data));
@@ -132,8 +140,8 @@ export default function index() {
         // ? DATA FORMAT
 
         // const data = {
-        //   conversationId,
-        //   typing: true,
+        // conversationId,
+        // typing: true,
         // };
 
         dispatch(UpdateTypingStatus(data));
@@ -146,12 +154,45 @@ export default function index() {
         // ? DATA FORMAT
 
         // const data = {
-        //   conversationId,
-        //   typing: true,
+        // conversationId,
+        // typing: true,
         // };
 
         dispatch(UpdateTypingStatus(data));
       });
+      // Add userList listener
+      socket.on("userList", (userList) => {
+        console.log("Received userList:", userList);
+        dispatch(updateUserList(userList));
+      });
+
+      //socket.on("callToUser", (data) => {
+      //  console.log("📞 Incoming call event received!", data);
+      //  setReceivedCall(true);
+      //  setCaller(data.from); // this is the socket id
+      //  setCallerName(data.name);
+      //  setCallerSignal(data.signal);
+      //});
+      //socket.on("callRejected", (data) => {
+      //  console.log("callRejected invoked", data);
+      //  alert(`Call Rejected from ${data.name}`);
+      //  setReceivedCall(false);
+      //  setCallAccepted(false);
+      //});
+      //socket.on("callEnded", (data) => {
+      //  alert(`Call is Ended from ${data.name}`);
+      //  setReceivedCall(false);
+      //  setCallAccepted(false);
+      //  setCallEnded(false);
+      //  connectionRef.current.destroy();
+      //  if (userVideo.current) {
+      //    userVideo.current.srcObject = null;
+      //  }
+      //});
+      //socket.on("onlineUsers", (onlineUsers) => {
+      // console.log("Received onlineUsers in index.js:", onlineUsers);
+      // // Optionally update userList with online users only if desired
+      //});
     }
 
     // Cleanup when the component unmounts or when the socket is manually disconnected
@@ -165,8 +206,12 @@ export default function index() {
         socket.off("new-message");
         socket.off("start-typing");
         socket.off("stop-typing");
-
+        socket.off("userList");
+        //socket.off("callToUser");
+        //socket.off("callEnded");
+        //socket.off("callRejected");
         socket.disconnect();
+        dispatch(disconnectSocket());
         console.log("Disconnected from socket server");
       }
     };
