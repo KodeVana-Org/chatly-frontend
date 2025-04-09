@@ -1,19 +1,21 @@
-import React from "react";
-import { useEffect } from "react";
-import { useRef } from "react";
-
+import React, { forwardRef, useEffect, useRef, useImperativeHandle } from "react";
 import Dropzone from "dropzone";
 import { UploadSimple } from "@phosphor-icons/react";
 
-export default function FlieDropZone({
-  acceptedFiles = "image/*,video/*",
-  maxFileSize = 16 * 1024 * 1024,
-  url = "/file/post",
-  multiple,
-  onFilesSelected
-}) {
+const FlieDropZone = forwardRef(function FlieDropZone(
+  { acceptedFiles = "image/*,video/*", maxFileSize = 16 * 1024 * 1024, url = "/file/post", multiple, onFilesSelected },
+  ref
+) {
   const dropzoneRef = useRef(null);
   const formRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    clearFiles: () => {
+      if (dropzoneRef.current) {
+        dropzoneRef.current.removeAllFiles(true);
+      }
+    },
+  }));
 
   useEffect(() => {
     Dropzone.autoDiscover = false;
@@ -22,28 +24,27 @@ export default function FlieDropZone({
       dropzoneRef.current = new Dropzone(formRef.current, {
         url,
         acceptedFiles,
-        maxFileSize: maxFileSize / (1024 * 1024), // Dropzone expects the max file size in MB
+        maxFilesize: maxFileSize / (1024 * 1024),
         autoProcessQueue: false,
-        addRemoveLink: true,
+        addRemoveLinks: true,
         uploadMultiple: multiple,
         maxFiles: multiple ? 8 : 1,
       });
+
+      dropzoneRef.current.on("addedfile", (file) => {
+        if (onFilesSelected) {
+          onFilesSelected(dropzoneRef.current.files);
+        }
+      });
+
+      dropzoneRef.current.on("maxfilesexceeded", (file) => {
+        dropzoneRef.current.removeFile(file);
+      });
     }
-
-    dropzoneRef.current.on("addedfile", (file) => {
-      if (onFilesSelected) {
-        onFilesSelected(dropzoneRef.current.files);
-      }
-    });
-
-
-    dropzoneRef.current.on("maxfilesexceeded", (file) => {
-      dropzoneRef.current.removeFile(file); // This will remove the excess file from the Dropzone
-    });
 
     return () => {
       if (dropzoneRef.current) {
-        dropzoneRef.current.removeAllFiles(true); // Clear all selected files
+        dropzoneRef.current.removeAllFiles(true);
         dropzoneRef.current.destroy();
         dropzoneRef.current = null;
       }
@@ -65,7 +66,7 @@ export default function FlieDropZone({
                 <UploadSimple size={24} />
               </div>
               <span className="font-medium text-black dark:text-white">
-                {multiple ? 'Drop files here to upload' : 'Drop File to upload'}
+                {multiple ? "Drop files here to upload" : "Drop File to upload"}
               </span>
             </div>
           </div>
@@ -73,4 +74,6 @@ export default function FlieDropZone({
       </div>
     </div>
   );
-}
+});
+
+export default FlieDropZone;

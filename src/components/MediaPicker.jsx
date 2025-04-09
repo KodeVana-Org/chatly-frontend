@@ -9,6 +9,7 @@ import { sendDirectMessage } from "../socket/socketConnection";
 export default function MediaPicker() {
   const modalRef = useRef(null);
   const dispatch = useDispatch();
+  const dropzoneComponentRef = useRef(); // new added for clearing selected file in state 
 
   const { currentConversation } = useSelector((state) => state.chat);
 
@@ -86,9 +87,11 @@ export default function MediaPicker() {
         },
       };
 
-      sendDirectMessage(data);
-
+      await sendDirectMessage(data);
+      // here i clear the message then why it is still setting the message 
       setMessage(""); // Clear the input after sending
+      setSelectedFiles([]); // Clear the selected message 
+      dropzoneComponentRef.current?.clearFiles(); // clearing the state 
 
       // close modal window after sending message
       dispatch(ToggleMediaModal(false));
@@ -128,7 +131,12 @@ export default function MediaPicker() {
 
         <div className="max-h-125 overflow-y-scroll no-scrollbar">
           {/* FileDropzone */}
-          <FlieDropZone multiple onFilesSelected={handleFilesSelected} />
+          {/* <FlieDropZone multiple onFilesSelected={handleFilesSelected} /> // Removed old one  */} 
+          <FlieDropZone
+            ref={dropzoneComponentRef}
+            multiple
+            onFilesSelected={handleFilesSelected}
+          />
         </div>
 
         <div className="flex flex-row items-center space-x-2 justify-between mt-4">
