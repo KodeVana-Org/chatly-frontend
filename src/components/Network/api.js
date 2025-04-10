@@ -28,7 +28,7 @@ export const joinProfile = (id, token) =>
 export const leaveProfile = (communityId, token) =>
   api(`/leave/${communityId}`, "POST", null, token);
 
-export const getAllProfiles = () => api("/community");
+export const getAllCommunities = () => api("/community");
 
 // New: Create a Post
 //export const createPost = async (communityId, content, imageUrl, token) => {

@@ -69,9 +69,7 @@ export default function CommunityDetail() {
     <div className="flex h-full flex-col border-l border-stroke dark:border-strokedark w-full">
       <div className="sticky flex items-center justify-between flex-row border-b border-stroke dark:border-strokedark px-6 py-4.5">
         <div className="w-full flex flex-col justify-center content-center items-center">
-          <h2 className="text-2xl text-black dark:text-white font-bold">
-            {community.name}
-          </h2>
+          <h2 className="text-2xl text-primary font-bold">{community.name}</h2>
           <p className="text-gray-600">{community.description}</p>
         </div>
         {/*

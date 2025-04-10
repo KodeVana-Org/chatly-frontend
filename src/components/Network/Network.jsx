@@ -5,7 +5,7 @@ import {
   createProfile,
   joinProfile,
   leaveProfile,
-  getAllProfiles,
+  getAllCommunities,
 } from "./api";
 
 export default function ProfileList() {
@@ -13,13 +13,22 @@ export default function ProfileList() {
   const { token } = useSelector((state) => state.auth);
   const [profiles, setProfiles] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  const [showJoinForm, setShowJoinForm] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [joinForm, setJoinForm] = useState({
+    reason: "",
+    location: "",
+    message: "",
+    phoneNumber: "",
+    gender: "",
+    communityId: null,
+  });
 
   // Fetch all profiles
   const fetchProfiles = async () => {
     try {
-      const { data } = await getAllProfiles(token);
+      const { data } = await getAllCommunities(token);
       setProfiles(data.communities || []);
     } catch (error) {
       console.error("Error fetching profiles:", error);
@@ -44,44 +53,85 @@ export default function ProfileList() {
       setShowPopup(false); // Close popup
     } catch (error) {
       console.error("Error creating profile:", error);
+      setShowPopup(false); // Close popup
       alert(error.message || "Failed to create profile");
     }
   };
 
   // Join profile
-  const handleJoin = async (profileId) => {
+  const handleJoin = async (communityId) => {
+    if (
+      joinForm.reason == "" ||
+      joinForm.location == "" ||
+      joinForm.message == "" ||
+      joinForm.phoneNumber == "" ||
+      joinForm.gender == ""
+    ) {
+      return alert("Filling all details is required!");
+    }
     try {
-      await joinProfile(profileId, token); // Replace with joinProfile
-      await fetchProfiles(); // Refetch
+      const formData = {
+        reason: joinForm.reason,
+        location: joinForm.location,
+        message: joinForm.message,
+        phoneNumber: joinForm.phoneNumber,
+        gender: joinForm.gender,
+      };
+      const updatedCommunity = await joinProfile(communityId, formData, token);
+      console.log("Joined network:", updatedCommunity.data.community);
+      await fetchProfiles();
+      setShowJoinForm(false);
+      setJoinForm({
+        reason: "",
+        location: "",
+        message: "",
+        phoneNumber: "",
+        gender: "",
+        communityId: null,
+      });
     } catch (error) {
-      console.error("Error joining profile:", error);
+      console.error("Failed to join prifile:", error);
+      setShowJoinForm(false);
       alert(error.message || "Failed to join profile");
     }
   };
 
   // Leave profile
-  const handleLeave = async (profileId) => {
+  const handleLeave = async (communityId) => {
     try {
-      await leaveProfile(profileId, token); // Replace with leaveProfile
-      await fetchProfiles(); // Refetch
+      const profile = profiles.find((c) => c._id === communityId);
+
+      if (!profile) {
+        alert("Profile not found");
+        return;
+      }
+
+      const isAdmin = profile.admins.some((admin) => {
+        const adminId = admin._id || admin;
+        return adminId.toString() === user._id.toString();
+      });
+
+      if (isAdmin) {
+        alert("❗ Admin cannot leave profile.");
+        return;
+      }
+
+      const updatedCommunity = await leaveProfile(communityId, token);
+      await fetchProfiles();
     } catch (error) {
-      console.error("Error leaving profile:", error);
+      console.error("Failed to leave profile:", error);
       alert(error.message || "Failed to leave profile");
     }
   };
 
   return (
-    <div className="h-full w-full flex flex-col gap-5 p-5">
-      {/* Create Profile Button */}
-      <div className="w-full justify-center content-center">
-        <button
-          onClick={() => setShowPopup(true)}
-          className="px-3 py-2 bg-primary text-lg text-white font-semibold rounded-md hover:bg-blue-600"
-        >
-          Create Profile
-        </button>
-      </div>
-
+    <div className="h-full w-full flex flex-col p-7 items-center">
+      <button
+        onClick={() => setShowPopup(true)}
+        className="mb-12 px-3 py-2 bg-primary text-lg text-white font-semibold rounded-md hover:bg-blue-600"
+      >
+        Create Service Profile
+      </button>
       {/* Popup for Profile Creation */}
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -119,69 +169,116 @@ export default function ProfileList() {
         </div>
       )}
 
+      {/* Join Form */}
+      {showJoinForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="flex flex-col gap-2 bg-white dark:bg-boxdark-2 p-7 rounded-md shadow-lg">
+            <input
+              type="text"
+              value={joinForm.reason}
+              onChange={(e) =>
+                setJoinForm({ ...joinForm, reason: e.target.value })
+              }
+              placeholder="Reason for joining"
+              className="px-2 py-1 border rounded-md"
+            />
+            <input
+              type="text"
+              value={joinForm.location}
+              onChange={(e) =>
+                setJoinForm({ ...joinForm, location: e.target.value })
+              }
+              placeholder="Location"
+              className="px-2 py-1 border rounded-md"
+            />
+            <input
+              type="text"
+              value={joinForm.message}
+              onChange={(e) =>
+                setJoinForm({ ...joinForm, message: e.target.value })
+              }
+              placeholder="Message"
+              className="px-2 py-1 border rounded-md"
+            />
+            <input
+              type="number"
+              value={joinForm.phoneNumber}
+              onChange={(e) =>
+                setJoinForm({
+                  ...joinForm,
+                  phoneNumber: e.target.value,
+                })
+              }
+              placeholder="Phone Number"
+              className="px-2 py-1 border rounded-md"
+            />
+            <input
+              type="text"
+              value={joinForm.gender}
+              onChange={(e) =>
+                setJoinForm({ ...joinForm, gender: e.target.value })
+              }
+              placeholder="Gender"
+              className="px-2 py-1 border rounded-md"
+            />
+            <button
+              onClick={() => handleJoin(comm._id)}
+              className="p-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+            >
+              Submit
+            </button>
+            <button
+              onClick={() => setShowJoinForm(false)}
+              className="p-1 text-white bg-rose-500 rounded-md hover:bg-rose-600"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Profile List */}
       <h2 className="text-xl font-bold mb-4">Profiles</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="flex flex-wrap gap-7">
         {profiles.length === 0 ? (
           <p>No profiles available</p>
         ) : (
-          profiles.map((profile) => {
-            let isMember = false;
-            try {
-              // Debugging member and user IDs
-              console.log("Profile members:", profile.members);
-              console.log("Current user ID:", user?._id);
+          profiles.map((comm) => {
+            const isMember =
+              user &&
+              comm.members &&
+              comm.members.some((m) => {
+                const memberId =
+                  typeof m.user === "object" ? m.user._id : m.user;
+                return memberId?.toString() === user._id?.toString();
+              });
 
-              if (
-                user &&
-                user._id &&
-                profile.members &&
-                Array.isArray(profile.members)
-              ) {
-                isMember = profile.members.some((member) => {
-                  if (member && member._id) {
-                    return member._id.toString() === user._id.toString();
-                  }
-                  console.warn("Member missing _id:", member);
-                  return false;
-                });
-              } else {
-                console.warn("Invalid user or members data:", {
-                  user,
-                  members: profile.members,
-                });
-              }
-            } catch (error) {
-              console.error("Error checking membership:", error);
-              isMember = false; // Default to false to avoid breaking the UI
-            }
-
+            console.log(`Community ${comm.name} members:`, comm.members); // Debug log
             return (
-              <Link
-                to={`/dashboard/network/${profile._id}`}
-                key={profile._id}
-                className="w-60 h-50 flex flex-col gap-7 items-center content-center justify-center p-7 bg-gray dark:bg-boxdark-2 rounded-md hover:bg-gray-200 dark:hover:bg-strokedark border border-gray dark:border-graydark"
+              <div
+                key={comm._id}
+                className="h-40 w-fit px-7 py-5 bg-gray-100 rounded flex gap-7 justify-between items-center border"
               >
-                <div className="text-center">
-                  <h3 className="font-medium">{profile.name}</h3>
-                  <p className="text-sm">{profile.description}</p>
-                </div>
+                <Link to={`/dashboard/network/${comm._id}`} className="flex-1">
+                  <span className="font-medium">{comm.name}</span>
+                  <p className="text-sm text-gray-600">{comm.description}</p>
+                </Link>
                 {isMember ? (
                   <button
-                    onClick={() => handleLeave(profile._id)}
-                    className="py-1 px-3 bg-rose-500 text-white rounded hover:bg-rose-600"
+                    onClick={() => handleLeave(comm._id)}
+                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                   >
                     Leave
                   </button>
                 ) : (
                   <button
-                    onClick={() => handleJoin(profile._id)}
-                    className="py-1 px-3 bg-green-500 text-white rounded hover:bg-green-600"
+                    onClick={() => setShowJoinForm(true)}
+                    className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
                   >
                     Join
                   </button>
                 )}
-              </Link>
+              </div>
             );
           })
         )}
