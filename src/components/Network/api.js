@@ -19,16 +19,16 @@ const api = async (endpoint, method = "GET", body = null, token = null) => {
   return data;
 };
 
-export const createCommunity = (name, description, token) =>
+export const createProfile = (name, description, token) =>
   api("/community", "POST", { name, description }, token);
 
-export const joinCommunity = (id, token) =>
+export const joinProfile = (id, token) =>
   api(`/community/${id}`, "POST", null, token);
 
-export const leaveCommunity = (communityId, token) =>
+export const leaveProfile = (communityId, token) =>
   api(`/leave/${communityId}`, "POST", null, token);
 
-export const getAllCommunities = () => api("/community");
+export const getAllProfiles = () => api("/community");
 
 // New: Create a Post
 //export const createPost = async (communityId, content, imageUrl, token) => {

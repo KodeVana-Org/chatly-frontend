@@ -2,11 +2,9 @@ import {
   Microphone,
   MicrophoneSlash,
   PhoneDisconnect,
+  User,
 } from "@phosphor-icons/react";
 import React, { useState } from "react";
-
-import User01 from "../images/user/user-01.png";
-import User02 from "../images/user/user-02.png";
 
 export default function AudioRoom({ open, handleClose }) {
   const [muteAudio, setMuteAudio] = useState(false);
@@ -29,8 +27,9 @@ export default function AudioRoom({ open, handleClose }) {
             {/* Audio Feed 1 */}
             <div className="relative h-full w-full bg-gray dark:bg-boxdark-2 rounded-md flex items-center justify-center">
               <div className="space-y-2">
+                {/* TODO: Add user 1 feed */}
                 <img
-                  src={User01}
+                  src={User}
                   alt=""
                   className="h-20 w-20 rounded-full object-center object-cover"
                 />
@@ -48,8 +47,9 @@ export default function AudioRoom({ open, handleClose }) {
 
             <div className="relative h-full w-full bg-gray dark:bg-boxdark-2 rounded-md flex items-center justify-center">
               <div className="space-y-2">
+                {/* TODO: Add user 1 feed */}
                 <img
-                  src={User02}
+                  src={User}
                   alt=""
                   className="h-20 w-20 rounded-full object-center object-cover"
                 />

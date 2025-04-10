@@ -151,41 +151,17 @@ export default function ChatWithCodeRendering() {
         </div>
       </div>
 
-      <div
-        className="chat-box"
-        style={{ flexGrow: 1, overflowY: "auto", padding: "20px" }}
-      >
+      <div className="chat-box p-5 overflow-y-auto" style={{ flexGrow: 1 }}>
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`chat-message ${msg.sender}`}
-            style={{
-              marginBottom: "15px",
-              padding: "10px 15px",
-              borderRadius: "8px",
-              backgroundColor: msg.sender === "user" ? "#e5e7eb" : "#1f2937",
-              color: msg.sender === "user" ? "#1f2937" : "#fff",
-              maxWidth: "80%",
-              alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
-              position: "relative",
-            }}
+            className={`relative max-w-[80%] chat-message ${msg.sender === "user" ? "bg-primary text-white self-end" : "bg-[#1f2937] text-white self-start"} mb-4 px-3 py-4 rounded-lg`}
           >
             {renderMessageContent(msg.text, msg.sender)}
           </div>
         ))}
         {loading && (
-          <div
-            className="chat-message ai"
-            style={{
-              marginBottom: "15px",
-              padding: "10px 15px",
-              borderRadius: "8px",
-              backgroundColor: "#1f2937",
-              color: "#fff",
-              maxWidth: "80%",
-              alignSelf: "flex-start",
-            }}
-          >
+          <div className="max-w-[80%] chat-message ai mb-3 px-2 py-3 rounded-lg bg-[#1f2937] text-white self-start">
             Thinking...
           </div>
         )}

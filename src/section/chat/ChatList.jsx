@@ -178,8 +178,8 @@ export default function ChatList({ open, handleClose }) {
                         style={{
                           backgroundColor:
                             object.status === "group" ? "#9ca3af" : "#d1d5db",
-                          height: "100%",
-                          width: "100%",
+                          height: "40px",
+                          width: "40px",
                           borderRadius: "50%",
                           display: "flex",
                           alignItems: "center",

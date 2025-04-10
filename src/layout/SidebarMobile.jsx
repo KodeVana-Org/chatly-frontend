@@ -4,8 +4,9 @@ import {
   FinnTheHuman,
   OpenAiLogo,
   ChatTeardropText,
-  SignOut,
   UserCircle,
+  Network,
+  SignOut,
   X,
 } from "@phosphor-icons/react";
 import React, { useEffect, useState } from "react";
@@ -18,7 +19,7 @@ import { GetMe } from "../redux/slices/user";
 const NAVIGATION = [
   {
     key: 0,
-    title: "DMs",
+    title: "Chat",
     icon: <Chat size={24} />,
     path: "/dashboard",
   },
@@ -30,18 +31,24 @@ const NAVIGATION = [
   },
   {
     key: 2,
-    title: "Chat with AI",
+    title: "Network",
+    icon: <Network size={24} />,
+    path: "/dashboard/network",
+  },
+  {
+    key: 3,
+    title: "AI",
     icon: <OpenAiLogo size={24} />,
     path: "/dashboard/ai",
   },
   {
-    key: 3,
+    key: 4,
     title: "Toonify",
     icon: <FinnTheHuman size={24} />,
     path: "/dashboard/toonify",
   },
   {
-    key: 4,
+    key: 5,
     title: "Profile",
     icon: <UserCircle size={24} />,
     path: "/dashboard/profile",

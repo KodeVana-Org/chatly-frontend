@@ -34,7 +34,7 @@ import dateFormat, { masks } from "dateformat";
 
 export default function Inbox() {
   const dispatch = useDispatch();
-  const [userInfoOpen, setUserInfoOpen] = useState(true);
+  const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true); // add this
   const containerRef = useRef(null);
   const [scheduledMessages, setScheduledMessages] = useState([]); // New state for scheduled messages NOTE:
@@ -100,12 +100,12 @@ export default function Inbox() {
     return () => clearInterval(interval);
   }, [scheduledMessages]);
 
-  const [videoCall, setVideoCall] = useState(false);
-  const [audioCall, setAudioCall] = useState(false);
+  // const [videoCall, setVideoCall] = useState(false);
+  // const [audioCall, setAudioCall] = useState(false);
   const [gifOpen, setGifOpen] = useState(false);
 
-  const handleToggleVideo = () => setVideoCall((p) => !p);
-  const handleToggleAudio = () => setAudioCall((p) => !p);
+  // const handleToggleVideo = () => setVideoCall((p) => !p);
+  // const handleToggleAudio = () => setAudioCall((p) => !p);
   const handleToggleGif = (e) => {
     e.preventDefault();
     setGifOpen((prev) => !prev);
@@ -246,7 +246,6 @@ export default function Inbox() {
   }, [MSG_LIST, currentConversation, isNearBottom]);
 
   const handleSendMsg = (e, scheduledContent = null) => {
-    console.log("sending message");
     const content = scheduledContent || inputValue; // Use scheduled content if provided
     if (content) {
       const data = {
@@ -262,8 +261,8 @@ export default function Inbox() {
     }
   };
 
-  //const handleSendMsg = (e) => { TODO: old one
-  //  console.log("sending message");
+  // NOTE: old one
+  //const handleSendMsg = (e) => {
   //  if (inputValue) {
   //    const data = {
   //      conversationId: currentConversation,
@@ -280,7 +279,7 @@ export default function Inbox() {
 
   return (
     <>
-      {currentConversation ? (
+      {currentConversation && other_user ? (
         <div
           className={`flex h-full flex-col border-l border-stroke dark:border-strokedark w-full ${
             userInfoOpen ? "xl:w-1/2" : "xl:w-3/4"

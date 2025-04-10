@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { CallProvider } from "./components/Call/CallContext";
+import Home from "./pages/HomePage";
 import Messages from "./pages/Messages";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -12,8 +13,8 @@ import ToonifyPage from "./pages/ToonifyPage";
 import ProfilePage from "./pages/ProfilePage";
 //import Index from "./components/Call/Index";
 import SingleUser from "./components/Call/SingleUser";
-import CommunityList from "./components/Community/Community";
-import CommunityDetails from "./components/Community/CommunityDetails";
+import Network from "./components/Network/Network";
+import NetworkForum from "./components/Network/NetworkDetails";
 
 export default function App() {
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function App() {
       <Routes>
         {/* Redirect / to /auth/login */}
 
-        <Route path="/" element={<Navigate to="/auth/login" />} />
+        <Route path="/" element={<Home />} />
 
         {/*
     <Route index={true} element={<Messages />} /> */}
@@ -47,8 +48,8 @@ export default function App() {
           <Route path="toonify" element={<ToonifyPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="calls" element={<SingleUser />} />
-          <Route path="community" element={<CommunityList />} />
-          <Route path="community/:id" element={<CommunityDetails />} />
+          <Route path="network" element={<Network />} />
+          <Route path="network/:id" element={<NetworkForum />} />
         </Route>
       </Routes>
     </CallProvider>
