@@ -1,156 +1,246 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { getAllCommunities, createPost, getPostsByCommunityId } from "./api";
 import { PaperPlaneTilt, Paperclip } from "@phosphor-icons/react";
+import { Link } from "react-router-dom"
+
+//NOTE: put this in the backend socketHandler.js
+// socket.on("joinCommunity", (communityId) => {
+//     socket.join(communityId); // Join room for this community
+// });
+//
+// socket.on("newPost", (post) => {
+//     io.to(post.communityId).emit("postAdded", post); // Broadcast to community
+// });
 
 export default function CommunityDetail() {
-  const { token } = useSelector((state) => state.auth);
-  const { user } = useSelector((state) => state.user);
-  const { id } = useParams();
-  const [community, setCommunity] = useState(null);
-  const [posts, setPosts] = useState([]);
-  const [content, setContent] = useState("");
-  const [imageFile, setImageFile] = useState(""); //changed this name
-  const [loading, setLoading] = useState(false); //added this
+    const { token, socket, socketId } = useSelector((state) => state.auth);
+    const { user } = useSelector((state) => state.user);
+    const { id } = useParams();
+    const [community, setCommunity] = useState(null);
+    const [posts, setPosts] = useState([]);
+    const [content, setContent] = useState("");
+    const [imageFile, setImageFile] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const postsContainerRef = useRef(null);
 
-  useEffect(() => {
-    const fetchCommunityAndPosts = async () => {
-      try {
-        // Fetch communities
-        const { data } = await getAllCommunities();
-        const selected = data.communities.find((comm) => comm._id === id);
-        if (selected) setCommunity(selected);
+    useEffect(() => {
+        const fetchCommunityAndPosts = async () => {
+            try {
+                const { data } = await getAllCommunities();
+                const selected = data.communities.find((comm) => comm._id === id);
+                if (selected) setCommunity(selected);
 
-        // Fetch posts
-        const postsData = await getPostsByCommunityId(id);
-        console.log("Posts data:", postsData); // Debug log
-        setPosts(postsData.data.posts || []); // Extract nested posts array
-      } catch (error) {
-        console.error("Failed to fetch community or posts:", error);
-        setPosts([]); // Reset to empty array on error
-      }
+                const postsData = await getPostsByCommunityId(id);
+                setPosts(postsData.data.posts || []);
+            } catch (error) {
+                console.error("Failed to fetch community or posts:", error);
+                setPosts([]);
+            }
+        };
+
+        // Connect to WebSocket and join community room
+        socket.emit("joinCommunity", id);
+
+        // Listen for new posts
+        socket.on("postAdded", (newPost) => {
+            setPosts((prev) => {
+                // Avoid duplicates
+                if (prev.some((p) => p._id === newPost._id)) return prev;
+                return [newPost, ...prev];
+            });
+            // Scroll to top only if it's the current user's post
+            if (
+                newPost.author.name === (user.name || "You") &&
+                postsContainerRef.current
+            ) {
+                postsContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+            }
+        });
+
+        fetchCommunityAndPosts();
+
+        // Cleanup on unmount
+        return () => {
+            socket.off("postAdded");
+            socket.disconnect();
+        };
+    }, [id, user.name]);
+
+    const handleCreatePost = async () => {
+        if (!content && !imageFile) {
+            return alert("Post must have content or an image");
+        }
+        setLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append("content", content);
+            formData.append("communityId", id);
+            if (imageFile) {
+                formData.append("image", imageFile);
+            }
+
+            const response = await createPost(formData, token);
+            const postData = response.data || response;
+
+            const newPost = {
+                _id: postData._id || Date.now().toString(),
+                content: content,
+                author: { name: user.name || "You" },
+                createdAt: new Date().toISOString(),
+                imageUrl: postData.imageUrl || null,
+                communityId: id, // Include for WebSocket
+            };
+
+            // Emit to WebSocket server
+            socket.emit("newPost", newPost);
+
+            // Local update (for current user)
+            setPosts((prev) => [newPost, ...prev]);
+            setContent("");
+            setImageFile(null);
+            document.getElementById("imageUpload").value = null;
+
+            // Scroll to top for current user
+            if (postsContainerRef.current) {
+                postsContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            // Optional: Re-fetch to sync (can remove with WebSocket)
+            try {
+                const postsData = await getPostsByCommunityId(id);
+                setPosts(postsData.data.posts || []);
+            } catch (fetchError) {
+                console.error("Failed to re-fetch posts:", fetchError);
+            }
+        } catch (error) {
+            console.error("Failed to create post:", error);
+            alert("you are not member");
+        } finally {
+            setLoading(false);
+        }
     };
-    fetchCommunityAndPosts();
-  }, [id]);
 
-  const handleCreatePost = async () => {
-    if (!content && !imageUrl)
-      return alert("Post must have content or an image");
-    setLoading(true);
-
-    //NOTE:  added this
-    try {
-      // Create FormData to send multipart/form-data
-      const formData = new FormData();
-      formData.append("content", content);
-      formData.append("communityId", id);
-      if (imageFile) {
-        formData.append("image", imageFile); // Append the image file
-      }
-
-      // Call the API with FormData
-      const newPost = await createPost(formData, token);
-      setPosts((prev) => [...prev, newPost]);
-      setContent("");
-      setImageFile(null); // Reset file input
-      setLoading(false);
-    } catch (error) {
-      console.error("Failed to create post:", error);
-      alert(error.message || "Failed to create post");
-      setLoading(false);
-    }
-  };
-
-  if (!community) return <div className="p-4">Loading...</div>;
-  console.log("community", community);
-
-  return (
-    <div className="flex h-full flex-col border-l border-stroke dark:border-strokedark w-full">
-      <div className="sticky flex items-center justify-between flex-row border-b border-stroke dark:border-strokedark px-6 py-4.5">
-        <div className="w-full flex flex-col justify-center content-center items-center">
-          <h2 className="text-2xl text-primary font-bold">{community.name}</h2>
-          <p className="text-gray-600">{community.description}</p>
-        </div>
-        {/*
-        <div className="pl-7">
-          <h3 className="text-lg font-semibold">
-            Members ({community.members.length})
-          </h3>
-          <ul className="list-disc pl-5">
-            {community.members.map((member) => (
-              <li key={member._id} className="text-sm">
-                {member._id === user._id ? "You" : member.name}
-                {community.admins.some((admin) => admin._id === member._id) &&
-                  " (Admin)"}
-                {community.creator._id === member._id && " (Creator)"}
-              </li>
-            ))}
-          </ul>
-        </div>
-          */}
-      </div>
-      <div className="max-h-full space-y-3.5 overflow-y-auto no-scrollbar px-6 py-7.5 grow">
-        {posts.map((post) => (
-          <div key={post._id} className="p-2 border-b overflow-y-scroll">
-            <p className="text-lg font-medium text-black dark:text-white">
-              {post.content}
-            </p>
-            {post.imageUrl && (
-              <img src={post.imageUrl} alt="Post" className="max-w-xs mt-2" />
-            )}
-            <span className="text-xs text-gray-500">
-              Posted by {post.author.name} at{" "}
-              {new Date(post.createdAt).toLocaleString()}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="sticky bottom-0 border-t border-stroke bg-white px-6 py-5 dark:border-strokedark dark:bg-boxdark">
-        <div className="flex items-center justify-between space-x-4.5">
-          <div className="relative w-full">
-            <input
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreatePost(e);
-              }}
-              type="text"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write a post..."
-              className="h-13 w-full rounded-md border border-stroke bg-gray pl-5 pr-19 text-black placeholder-body outline-none focus:border-primary dark:border-strokedark dark:bg-boxdark-2 dark:text-white"
-            />
-
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center space-x-4">
-              {/*ADDED THIS */}
-              <div className="relative">
-                {/* Hidden file input */}
-                <span className="absolute right-7 top-0">
-                  <Paperclip size={24} />
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files[0])}
-                  className="opacity-0" // Hide the default input
-                  id="imageUpload" // Add an ID to connect with the label
-                />
-              </div>
+    if (!community) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-gray-800 dark:bg-gray-900">
+                <div className="text-xl text-gray-400 dark:text-gray-500 animate-pulse">
+                    Loading...
+                </div>
             </div>
-          </div>
-          <button
-            onClick={handleCreatePost}
-            disabled={!content}
-            className={`flex items-center justify-center h-13 w-13 rounded-md hover:bg-opacity-90 ${
-              !content
-                ? "bg-gray text-body dark:bg-boxdark-2 dark:text-body"
-                : "bg-primary text-white"
-            }`}
-          >
-            <PaperPlaneTilt size={24} weight="bold" />
-          </button>
+        );
+    }
+
+    return (
+        <div className="flex min-h-screen flex-col w-full bg-gray-800 dark:bg-gray-900">
+            {/* Header Section */}
+            <div className="sticky top-0 z-20 bg-gray-700 dark:bg-gray-800 border-b border-gray-600 dark:border-gray-700 px-6 py-4 shadow-sm">
+                <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+                    <Link to='/dashboard/network'>Back</Link>
+                    <h2 className="text-3xl font-bold text-gray-100 dark:text-gray-200 tracking-tight">
+                        {community.name}
+                    </h2>
+                    <p className="mt-2 text-gray-400 dark:text-gray-500 text-sm leading-relaxed max-w-md">
+                        {community.description}
+                    </p>
+                </div>
+            </div>
+
+            {/* Posts Section (Scrollable) */}
+            <div
+                ref={postsContainerRef}
+                className="flex-1 max-w-4xl mx-auto w-full px-6 py-8 overflow-y-auto h-[calc(100vh-240px)]"
+            >
+                {posts.length === 0 ? (
+                    <div className="text-center text-gray-400 dark:text-gray-500 italic text-lg py-10">
+                        No posts yet. Be the first to share something!
+                    </div>
+                ) : (
+                    posts.map((post) => (
+                        <div
+                            key={post._id}
+                            className="bg-gray-700 dark:bg-gray-800 rounded-2xl shadow-md p-6 border border-gray-600 dark:border-gray-700 hover:shadow-lg transition-all duration-300 mb-6"
+                        >
+                            <div className="flex flex-col">
+                                <div className="flex items-center justify-between mb-3">
+                                    <p className="text-lg font-semibold text-gray-100 dark:text-gray-200">
+                                        {post.author?.name || "Unknown User"}
+                                    </p>
+                                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                                        {new Date(post.createdAt).toLocaleString()}
+                                    </span>
+                                </div>
+                                {post.content ? (
+                                    <p className="text-gray-200 dark:text-gray-300 leading-relaxed mb-4">
+                                        {post.content}
+                                    </p>
+                                ) : (
+                                    <p className="text-gray-400 dark:text-gray-500 italic">
+                                        No text content
+                                    </p>
+                                )}
+                                {post.imageUrl && (
+                                    <img
+                                        src={post.imageUrl}
+                                        alt="Post"
+                                        className="w-full max-w-md rounded-lg mt-2 object-cover"
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Post Input (Sticky Bottom) */}
+            <div className="sticky bottom-0 z-10 bg-gray-700 dark:bg-gray-800 border-t border-gray-600 dark:border-gray-700 px-6 py-4 shadow-md">
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex items-center space-x-4">
+                        <div className="relative flex-1">
+                            <input
+                                type="text"
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !loading) handleCreatePost();
+                                }}
+                                placeholder="What's on your mind?"
+                                className="w-full p-4 pr-16 rounded-lg border border-gray-500 dark:border-gray-600 bg-gray-600 dark:bg-gray-700 text-gray-100 dark:text-gray-200 text-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all duration-200"
+                                disabled={loading}
+                            />
+                            <label
+                                htmlFor="imageUpload"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 dark:text-gray-500 hover:text-teal-400 dark:hover:text-teal-400 transition-colors duration-200"
+                            >
+                                <Paperclip size={28} />
+                            </label>
+                            <input
+                                id="imageUpload"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setImageFile(e.target.files[0])}
+                                className="hidden"
+                            />
+                        </div>
+                        <button
+                            onClick={handleCreatePost}
+                            disabled={loading || (!content && !imageFile)}
+                            className={`flex items-center justify-center h-14 w-14 rounded-full shadow-sm transition-all duration-200 ${loading || (!content && !imageFile)
+                                ? "bg-gray-500 dark:bg-gray-600 text-gray-400 cursor-not-allowed"
+                                : "bg-teal-500 text-white hover:bg-teal-600"
+                                }`}
+                        >
+                            <PaperPlaneTilt size={28} weight="bold" />
+                        </button>
+                    </div>
+                    {imageFile && (
+                        <div className="mt-2 text-sm text-gray-400 dark:text-gray-500">
+                            Selected: {imageFile.name}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
