@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   createProfile,
@@ -9,6 +9,7 @@ import {
 } from "./api";
 
 export default function ProfileList() {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
   const { token } = useSelector((state) => state.auth);
   const [profiles, setProfiles] = useState([]);
@@ -16,6 +17,7 @@ export default function ProfileList() {
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [commId, setCommId] = useState("");
   const [joinForm, setJoinForm] = useState({
     reason: "",
     location: "",
@@ -32,7 +34,6 @@ export default function ProfileList() {
       setProfiles(data.communities || []);
     } catch (error) {
       console.error("Error fetching profiles:", error);
-      alert("Could not load profiles");
     }
   };
 
@@ -58,8 +59,13 @@ export default function ProfileList() {
     }
   };
 
+  const handleJoinButton = (communityId) => {
+    setShowJoinForm(true);
+    setCommId(communityId);
+  };
+
   // Join profile
-  const handleJoin = async (communityId) => {
+  const handleJoin = async () => {
     if (
       joinForm.reason == "" ||
       joinForm.location == "" ||
@@ -77,6 +83,10 @@ export default function ProfileList() {
         phoneNumber: joinForm.phoneNumber,
         gender: joinForm.gender,
       };
+
+      // TODO: fix this navigation
+      navigate(`/dashboard/network/${commId}`);
+
       const updatedCommunity = await joinProfile(communityId, formData, token);
       console.log("Joined network:", updatedCommunity.data.community);
       await fetchProfiles();
@@ -222,7 +232,7 @@ export default function ProfileList() {
               className="px-2 py-1 border rounded-md"
             />
             <button
-              onClick={() => handleJoin(comm._id)}
+              onClick={() => handleJoin()}
               className="p-1 bg-green-500 text-white rounded-md hover:bg-green-600"
             >
               Submit
@@ -272,7 +282,7 @@ export default function ProfileList() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => setShowJoinForm(true)}
+                    onClick={() => handleJoinButton(comm._id)}
                     className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
                   >
                     Join
